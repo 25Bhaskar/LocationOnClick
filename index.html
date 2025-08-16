@@ -214,7 +214,10 @@
       contacts.forEach((c, index) => {
         html += `<li>
           <span><strong>${c.name}</strong> — ${c.phone}</span>
-          <button class="btn-send" onclick="fillAndSend(${index})">${text[isHindi ? 'hi':'en'].sendLocationBtn}</button>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-send" onclick="fillAndSend(${index})">${text[isHindi ? 'hi':'en'].sendLocationBtn}</button>
+            <button class="btn-send" style="background:#f44336;" onclick="deleteContact(${index})">Delete</button>
+          </div>
         </li>`;
       });
       html += '</ul>';
@@ -296,19 +299,30 @@
       window.location.href = `tel:+91${panicNumber}`;
     }
 
-    // Call Recent Contact Functionality
+    // Call Recent Contact Functionality (pick last saved contact)
     function callRecent() {
       const contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
       if (contacts.length === 0) {
         setStatus('No saved contacts to call.', true);
         return;
       }
-      const recentNumber = contacts[0].phone; // first saved contact
+      const recentNumber = contacts[contacts.length - 1].phone; // pick the last saved contact
       if(!/^[0-9]{10}$/.test(recentNumber)) {
         setStatus('Saved contact number is invalid.', true);
         return;
       }
       window.location.href = `tel:+91${recentNumber}`;
+    }
+
+    // Delete contact
+    function deleteContact(index) {
+      let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
+      if (contacts[index]) {
+        const removed = contacts.splice(index, 1);
+        localStorage.setItem('wa_contacts', JSON.stringify(contacts));
+        setStatus(`Deleted: ${removed[0].name}`);
+        showContacts(); // refresh the list
+      }
     }
 
   </script>
