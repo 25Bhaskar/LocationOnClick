@@ -68,9 +68,9 @@
     <!-- Papa Section -->
     <div class="row" style="margin-top: 10px; align-items: center;">
       <button id="papaBtn" onclick="callPapa()" style="background:#d32f2f; color:#fff; padding:10px 16px; border-radius:8px; border:none; font-weight:600; cursor:pointer;">
-        📞 Papa
+        📞 Emergency
       </button>
-      <input id="papaNumber" type="tel" maxlength="10" placeholder="Enter Papa's Number" inputmode="numeric" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ddd; margin-left:8px;" disabled />
+      <input id="papaNumber" type="tel" maxlength="10" placeholder="Enter Emergency Number" inputmode="numeric" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ddd; margin-left:8px;" disabled />
       <button id="papaEditBtn" onclick="togglePapaEdit()" style="background:#1976d2; color:#fff; padding:8px 12px; border-radius:6px; border:none; font-weight:600; cursor:pointer; margin-left:6px;">
         Edit
       </button>
@@ -80,7 +80,7 @@
     <div id="contactList"></div>
 
     <button id="recentBtn" onclick="callRecent()" style="background:#4caf50; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; margin-top:10px; cursor:pointer;">
-      📞 Call Recent
+      📞 Call Recently Saved Contact
     </button>
   </div>
 
@@ -267,13 +267,13 @@
         papaEditBtn.innerText='Save';
       } else {
         const num=papaInput.value.trim(); 
-        if(/^[0-9]{10}$/.test(num)){
+        if(/^[0-9]{1,9}$/.test(num)){
           localStorage.setItem('papa_number',num); 
-          flashStatus('Papa number saved.'); 
+          flashStatus('Emergency number saved.'); 
           papaInput.disabled=true; 
           papaEditBtn.innerText='Edit';
         } else {
-          flashStatus('Enter a valid 10-digit number for Papa.',true); 
+          flashStatus('Enter a valid 10-digit number for Emergency.',true); 
           papaInput.focus();
         }
       }
@@ -281,8 +281,8 @@
 
     function callPapa(){
       const num=localStorage.getItem('papa_number'); 
-      if(!num||!/^[0-9]{10}$/.test(num)){
-        flashStatus('No valid Papa number saved.',true); 
+      if(!num||!/^[0-9]{1,9}$/.test(num)){
+        flashStatus('No valid Emergency number saved.',true); 
         return;
       } 
       window.location.href=`tel:+91${num}`;
