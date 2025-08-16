@@ -48,53 +48,27 @@
     .btn-send:hover { opacity: 0.9; }
 
     /* Translate Button Style */
-#translateBtn { 
-  position: absolute; 
-  top: 5px; 
-/*   right: 140px; /* move left to make space for panic button */ 
-  background: #ff9800; 
-  color: #fff; 
-/*   padding: 8px 12px;  */
-  border-radius: 8px; 
-  border: none; 
-  cursor: pointer; 
-  display: flex; 
-  align-items: center; 
-  gap: 6px; 
-  font-weight: 600; 
-}
+    #translateBtn { 
+      position: absolute; 
+      top: 5px; 
+      background: #ff9800; 
+      color: #fff; 
+      border-radius: 8px; 
+      border: none; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+      font-weight: 600; 
+    }
     #translateBtn img { width: 18px; height: 18px; }
 
-    /* Panic Button Style */
-#panicBtn { 
-  position: absolute; 
-  top: 5px; 
-  right: 12px; 
-  background:#d32f2f; 
-  color:#fff; 
-/*   padding:8px 12px;  */
-  border-radius:8px; 
-  border:none; 
-  font-weight:600; 
-  cursor:pointer; 
-  display:flex; 
-  align-items:center; 
-  gap:6px; 
-}
     /* Responsive for small screens */
     @media (max-width: 480px) {
       #translateBtn {
         position: relative;
         top: 0;
         right: 0;
-        margin-bottom: 12px;
-        width: 100%;
-        justify-content: center;
-      }
-      #panicBtn {
-        position: relative;
-        top: 0;
-        left: 0;
         margin-bottom: 12px;
         width: 100%;
         justify-content: center;
@@ -128,20 +102,23 @@
 
     <button id="shareBtn" class="btn btn-share">Share Location</button>
 
-    <!-- Panic Contact Input -->
-    <div class="row" style="margin-top: 10px !important;">
-      <input id="panicContact" type="tel" maxlength="10" placeholder="Emergency Call" inputmode="numeric" />
+    <!-- Papa Button Section -->
+    <div class="row" style="margin-top: 10px !important; align-items: center;">
+      <button id="papaBtn" onclick="callPapa()" style="background:#d32f2f; color:#fff; padding:10px 16px; border-radius:8px; border:none; font-weight:600; cursor:pointer;">
+        📞 Papa
+      </button>
+      <input id="papaNumber" type="tel" maxlength="10" placeholder="Enter Papa's Number" inputmode="numeric" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ddd; margin-left:8px;" disabled />
+      <button id="papaEditBtn" onclick="togglePapaEdit()" style="background:#1976d2; color:#fff; padding:8px 12px; border-radius:6px; border:none; font-weight:600; cursor:pointer; margin-left:6px;">
+        Edit
+      </button>
     </div>
-
-    <!-- Panic Button -->
-    <button id="panicBtn" onclick="triggerPanic()" title="Emergency! Call saved contact immediately">🚨 Panic</button>
 
     <p class="note" id="note">Requires location permission.</p>
     <div id="status" class="status"></div>
     <div id="contactList"></div>
 
     <!-- Call Recent Contact Button -->
-    <button id="recentBtn" onclick="callRecent()" style="background:#4caf50; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; cursor:pointer; margin-top:10px;">
+    <button id="recentBtn" onclick="callRecent()" style="background:#4caf50; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; margin-top:10px; cursor:pointer;">
     📞 Call Recent
     </button>
   </div>
@@ -152,8 +129,10 @@
     const shareBtn = document.getElementById('shareBtn');
     const contactListDiv = document.getElementById('contactList');
     const translateBtn = document.getElementById('translateBtn');
-    const panicInput = document.getElementById('panicContact');
-    const panicBtn = document.getElementById('panicBtn');
+
+    const papaInput = document.getElementById('papaNumber');
+    const papaEditBtn = document.getElementById('papaEditBtn');
+    const papaBtn = document.getElementById('papaBtn');
 
     let isHindi = false;
 
@@ -306,38 +285,44 @@
       updateContactButtonsText();
     }
 
-    // Panic Contact Functionality
-    panicInput.addEventListener('blur', () => {
-      const num = panicInput.value.trim();
-      if(/^[0-9]{10}$/.test(num)) {
-        localStorage.setItem('panic_contact', num);
-        setStatus('Panic contact saved.');
-      } else if(num !== '') {
-        setStatus('Enter valid 10-digit number for panic contact.', true);
-      }
-    });
+    // Papa Button Logic
+    const savedPapa = localStorage.getItem('papa_number');
+    if(savedPapa) { papaInput.value = savedPapa; }
 
-    function triggerPanic() {
-      const panicNumber = localStorage.getItem('panic_contact');
-      if(!panicNumber || !/^[0-9]{10}$/.test(panicNumber)) {
-        setStatus('No valid panic contact saved.', true);
-        return;
+    function togglePapaEdit() {
+      if (papaInput.disabled) {
+        papaInput.disabled = false;
+        papaInput.focus();
+        papaEditBtn.innerText = 'Save';
+      } else {
+        const num = papaInput.value.trim();
+        if(/^[0-9]{10}$/.test(num)) {
+          localStorage.setItem('papa_number', num);
+          setStatus('Papa number saved.');
+          papaInput.disabled = true;
+          papaEditBtn.innerText = 'Edit';
+        } else {
+          setStatus('Enter a valid 10-digit number for Papa.', true);
+          papaInput.focus();
+        }
       }
-      window.location.href = `tel:+91${panicNumber}`;
     }
 
-    // Call Recent Contact Functionality (pick last saved contact)
+    function callPapa() {
+      const num = localStorage.getItem('papa_number');
+      if(!num || !/^[0-9]{10}$/.test(num)) {
+        setStatus('No valid Papa number saved.', true);
+        return;
+      }
+      window.location.href = `tel:+91${num}`;
+    }
+
+    // Call Recent Contact
     function callRecent() {
       const contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
-      if (contacts.length === 0) {
-        setStatus('No saved contacts to call.', true);
-        return;
-      }
-      const recentNumber = contacts[contacts.length - 1].phone; // pick the last saved contact
-      if(!/^[0-9]{10}$/.test(recentNumber)) {
-        setStatus('Saved contact number is invalid.', true);
-        return;
-      }
+      if (contacts.length === 0) { setStatus('No saved contacts to call.', true); return; }
+      const recentNumber = contacts[contacts.length - 1].phone;
+      if(!/^[0-9]{10}$/.test(recentNumber)) { setStatus('Saved contact number is invalid.', true); return; }
       window.location.href = `tel:+91${recentNumber}`;
     }
 
@@ -348,10 +333,9 @@
         const removed = contacts.splice(index, 1);
         localStorage.setItem('wa_contacts', JSON.stringify(contacts));
         setStatus(`Deleted: ${removed[0].name}`);
-        showContacts(); // refresh the list
+        showContacts();
       }
     }
-
   </script>
 </body>
 </html>
