@@ -31,7 +31,9 @@
     .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
     #contactList { margin-top: 16px; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 8px; display: none; }
     #contactList ul { padding: 0; margin: 0; list-style: none; }
-    #contactList li { padding: 6px 0; border-bottom: 1px solid #ddd; }
+    #contactList li { padding: 6px 0; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+    .btn-send { background: #25D366; color: #fff; border-radius: 8px; padding: 6px 12px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    .btn-send:hover { opacity: 0.9; }
   </style>
 </head>
 <body>
@@ -118,8 +120,11 @@
       }
 
       let html = '<ul>';
-      contacts.forEach(c => {
-        html += `<li><strong>${c.name}</strong> — ${c.phone}</li>`;
+      contacts.forEach((c, index) => {
+        html += `<li>
+          <span><strong>${c.name}</strong> — ${c.phone}</span>
+          <button class="btn-send" onclick="fillAndSend(${index})">Send Location</button>
+        </li>`;
       });
       html += '</ul>';
 
@@ -127,10 +132,7 @@
       contactListDiv.innerHTML = html;
     }
 
-    async function shareLocation() {
-      const phone = phoneInput.value.trim();
-      const name = nameInput.value.trim();
-
+    async function shareLocation(phone) {
       if (!validatePhone(phone)) {
         setStatus('Enter a valid 10-digit mobile number.', true);
         return;
@@ -149,13 +151,14 @@
           const lng = pos.coords.longitude.toFixed(6);
           const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
 
-          let msg = `My Live Location: ${mapsLink}`;
-          if (name) msg = `${name}'s Live Location: ${mapsLink}`;
-
+          const msg = `My current location is: ${mapsLink}`;
           const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`;
 
           setStatus('Opening WhatsApp…');
           location.href = waUrl;
+
+          // Hide saved contacts list after sending
+          contactListDiv.style.display = 'none';
         },
         (err) => {
           let msg = 'Failed to get location.';
@@ -168,7 +171,18 @@
       );
     }
 
-    shareBtn.addEventListener('click', shareLocation);
+    function fillAndSend(index) {
+      const contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
+      if (contacts[index]) {
+        phoneInput.value = contacts[index].phone;
+        validateInput();
+        shareLocation(contacts[index].phone);
+      }
+    }
+
+    shareBtn.addEventListener('click', () => {
+      shareLocation(phoneInput.value.trim());
+    });
   </script>
 </body>
 </html>
