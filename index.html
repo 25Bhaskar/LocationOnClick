@@ -112,6 +112,11 @@
     <p class="note" id="note">Requires location permission.</p>
     <div id="status" class="status"></div>
     <div id="contactList"></div>
+
+    <!-- Call Recent Contact Button -->
+    <button id="recentBtn" onclick="callRecent()" style="background:#4caf50; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; cursor:pointer; margin-top:10px;">
+    📞 Call Recent
+    </button>
   </div>
 
   <script>
@@ -289,6 +294,21 @@
         return;
       }
       window.location.href = `tel:+91${panicNumber}`;
+    }
+
+    // Call Recent Contact Functionality
+    function callRecent() {
+      const contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
+      if (contacts.length === 0) {
+        setStatus('No saved contacts to call.', true);
+        return;
+      }
+      const recentNumber = contacts[0].phone; // first saved contact
+      if(!/^[0-9]{10}$/.test(recentNumber)) {
+        setStatus('Saved contact number is invalid.', true);
+        return;
+      }
+      window.location.href = `tel:+91${recentNumber}`;
     }
 
   </script>
