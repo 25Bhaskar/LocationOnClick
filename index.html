@@ -5,8 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Share My Location</title>
   <style>
-    body { font-family: system-ui, Arial, sans-serif; margin: 0; padding: 24px; display: grid; place-items: center; min-height: 100vh; background: #f7f7f7; }
-    .card { background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 540px; position: relative; }
+    /* Video Background */
+    #bgVideo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -2;
+      transition: filter 0.3s ease;
+    }
+
+    /* Gradient Overlay */
+    #videoOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25));
+      z-index: -1;
+      transition: background 0.3s ease;
+    }
+
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0; padding: 24px;
+      display: grid; place-items: center;
+      min-height: 100vh;
+      background: #f7f7f7;
+    }
+
+    /* Floating card animation */
+    @keyframes floatCard {
+      0% { transform: translateY(0px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+      50% { transform: translateY(-10px); box-shadow: 0 16px 32px rgba(0,0,0,0.12); }
+      100% { transform: translateY(0px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(6px);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 540px;
+      position: relative;
+      animation: floatCard 6s ease-in-out infinite;
+      transition: transform 0.3s ease;
+      z-index: 1;
+    }
+
+    /* Card focus effect triggers background blur */
+    .card:focus-within, .card:hover {
+      transform: translateY(-2px);
+    }
+
     h2 { margin: 0 0 12px; }
     p { margin: 0 0 16px; line-height: 1.5; color: #444; }
     input, button { font-size: 16px; }
@@ -38,10 +94,25 @@
     /* Translate Button Style */
     #translateBtn { position: absolute; top: 12px; right: 12px; background: #ff9800; color: #fff; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; }
     #translateBtn img { width: 18px; height: 18px; }
+
+    /* Mobile responsiveness tweaks */
+    @media (max-width: 600px) {
+      .card { padding: 16px; width: 90%; }
+      #translateBtn { top: 8px; right: 8px; padding: 6px 10px; font-size: 14px; }
+      .row input, .btn { font-size: 14px; padding: 10px; }
+      .btn-send { padding: 5px 10px; font-size: 14px; }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
+  <!-- Video Background -->
+  <video autoplay muted loop playsinline id="bgVideo">
+    <source src="your-video.mp4" type="video/mp4">
+  </video>
+  <!-- Gradient Overlay -->
+  <div id="videoOverlay"></div>
+
+  <div class="card" id="mainCard">
     <!-- Translate Button -->
     <button id="translateBtn" onclick="toggleLanguage()">
       <img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> हिंदी
@@ -81,66 +152,18 @@
     const shareBtn = document.getElementById('shareBtn');
     const contactListDiv = document.getElementById('contactList');
     const translateBtn = document.getElementById('translateBtn');
+    const bgVideo = document.getElementById('bgVideo');
+    const videoOverlay = document.getElementById('videoOverlay');
+    const mainCard = document.getElementById('mainCard');
 
     let isHindi = false;
 
     const text = {
-      en: {
-        title: "Send My Live Location on WhatsApp",
-        description: "Enter details and share live location instantly.",
-        namePlaceholder: "Enter Name (optional)",
-        phonePlaceholder: "10-digit mobile number",
-        btnSave: "Save Contact",
-        btnCheck: "Check Saved Contacts",
-        shareBtn: "Share Location",
-        tooltip: "Enter exactly 10 digits (e.g., 9876543210). Name is optional but can be saved with the number.",
-        note: "Requires location permission.",
-        statusSaved: name => `Saved: ${name}`,
-        statusEnterValid: "Enter a valid 10-digit number before saving.",
-        statusInvalidPhone: "Enter a valid 10-digit mobile number.",
-        statusGeoUnsupported: "Geolocation not supported by this browser.",
-        statusGettingLocation: "Getting location… please allow permission.",
-        statusOpeningWhatsApp: "Opening WhatsApp…",
-        statusGeoFail: "Failed to get location.",
-        statusPermissionDenied: "Location permission denied. Allow it and try again.",
-        statusPositionUnavailable: "Position unavailable. Try enabling GPS or moving outdoors.",
-        statusTimeout: "Location request timed out. Try again.",
-        noContacts: "No contacts saved yet.",
-        sendLocationBtn: "Send Location",
-        translateBtn: "हिंदी",
-      },
-      hi: {
-        title: "व्हाट्सएप पर मेरी लाइव लोकेशन भेजें",
-        description: "विवरण दर्ज करें और तुरंत लाइव लोकेशन साझा करें।",
-        namePlaceholder: "नाम दर्ज करें (वैकल्पिक)",
-        phonePlaceholder: "10-अंकों का मोबाइल नंबर",
-        btnSave: "संपर्क सहेजें",
-        btnCheck: "सहेजे गए संपर्क देखें",
-        shareBtn: "लोकेशन साझा करें",
-        tooltip: "ठीक 10 अंक दर्ज करें (जैसे, 9876543210)। नाम वैकल्पिक है।",
-        note: "लोकेशन अनुमति आवश्यक है।",
-        statusSaved: name => `सहेजा गया: ${name}`,
-        statusEnterValid: "कृपया 10 अंकों का सही नंबर दर्ज करें।",
-        statusInvalidPhone: "कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें।",
-        statusGeoUnsupported: "इस ब्राउज़र में जियोलोकेशन समर्थित नहीं है।",
-        statusGettingLocation: "लोकेशन प्राप्त की जा रही है… अनुमति दें।",
-        statusOpeningWhatsApp: "WhatsApp खोला जा रहा है…",
-        statusGeoFail: "लोकेशन प्राप्त करने में विफल।",
-        statusPermissionDenied: "लोकेशन अनुमति अस्वीकृत। अनुमति दें और पुनः प्रयास करें।",
-        statusPositionUnavailable: "स्थिति उपलब्ध नहीं। GPS सक्षम करें या बाहर जाएँ।",
-        statusTimeout: "लोकेशन अनुरोध समय समाप्त। पुनः प्रयास करें।",
-        noContacts: "अभी तक कोई संपर्क सहेजा नहीं गया।",
-        sendLocationBtn: "लोकेशन भेजें",
-        translateBtn: "English",
-      }
+      en: { title: "Send My Live Location on WhatsApp", description: "Enter details and share live location instantly.", namePlaceholder: "Enter Name (optional)", phonePlaceholder: "10-digit mobile number", btnSave: "Save Contact", btnCheck: "Check Saved Contacts", shareBtn: "Share Location", tooltip: "Enter exactly 10 digits (e.g., 9876543210). Name is optional but can be saved with the number.", note: "Requires location permission.", statusSaved: name => `Saved: ${name}`, statusEnterValid: "Enter a valid 10-digit number before saving.", statusInvalidPhone: "Enter a valid 10-digit mobile number.", statusGeoUnsupported: "Geolocation not supported by this browser.", statusGettingLocation: "Getting location… please allow permission.", statusOpeningWhatsApp: "Opening WhatsApp…", statusGeoFail: "Failed to get location.", statusPermissionDenied: "Location permission denied. Allow it and try again.", statusPositionUnavailable: "Position unavailable. Try enabling GPS or moving outdoors.", statusTimeout: "Location request timed out. Try again.", noContacts: "No contacts saved yet.", sendLocationBtn: "Send Location", translateBtn: "हिंदी" },
+      hi: { title: "व्हाट्सएप पर मेरी लाइव लोकेशन भेजें", description: "विवरण दर्ज करें और तुरंत लाइव लोकेशन साझा करें।", namePlaceholder: "नाम दर्ज करें (वैकल्पिक)", phonePlaceholder: "10-अंकों का मोबाइल नंबर", btnSave: "संपर्क सहेजें", btnCheck: "सहेजे गए संपर्क देखें", shareBtn: "लोकेशन साझा करें", tooltip: "ठीक 10 अंक दर्ज करें (जैसे, 9876543210)। नाम वैकल्पिक है।", note: "लोकेशन अनुमति आवश्यक है।", statusSaved: name => `सहेजा गया: ${name}`, statusEnterValid: "कृपया 10 अंकों का सही नंबर दर्ज करें।", statusInvalidPhone: "कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें।", statusGeoUnsupported: "इस ब्राउज़र में जियोलोकेशन समर्थित नहीं है।", statusGettingLocation: "लोकेशन प्राप्त की जा रही है… अनुमति दें।", statusOpeningWhatsApp: "WhatsApp खोला जा रहा है…", statusGeoFail: "लोकेशन प्राप्त करने में विफल।", statusPermissionDenied: "लोकेशन अनुमति अस्वीकृत। अनुमति दें और पुनः प्रयास करें।", statusPositionUnavailable: "स्थिति उपलब्ध नहीं। GPS सक्षम करें या बाहर जाएँ।", statusTimeout: "लोकेशन अनुरोध समय समाप्त। पुनः प्रयास करें।", noContacts: "अभी तक कोई संपर्क सहेजा नहीं गया।", sendLocationBtn: "लोकेशन भेजें", translateBtn: "English" }
     };
 
-    function setStatus(msg, isError = false) {
-      const el = document.getElementById('status');
-      el.textContent = msg;
-      el.className = 'status ' + (isError ? 'error' : 'ok');
-    }
-
+    function setStatus(msg, isError = false) { const el = document.getElementById('status'); el.textContent = msg; el.className = 'status ' + (isError ? 'error' : 'ok'); }
     function validatePhone(p) { return /^[0-9]{10}$/.test(p); }
     function validateInput() { if (validatePhone(phoneInput.value.trim())) shareBtn.classList.add('active'); else shareBtn.classList.remove('active'); }
     phoneInput.addEventListener('input', validateInput);
@@ -154,32 +177,19 @@
       localStorage.setItem('wa_contacts', JSON.stringify(contacts));
       setStatus(text[isHindi ? 'hi':'en'].statusSaved(name));
       phoneInput.value = ''; nameInput.value = ''; validateInput();
-      updateContactButtonsText(); // Update text if list is visible
+      updateContactButtonsText();
     }
 
     function showContacts() {
       let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
-      if (contacts.length === 0) {
-        contactListDiv.style.display = 'block';
-        contactListDiv.innerHTML = `<p>${text[isHindi ? 'hi':'en'].noContacts}</p>`;
-        return;
-      }
+      if (contacts.length === 0) { contactListDiv.style.display = 'block'; contactListDiv.innerHTML = `<p>${text[isHindi ? 'hi':'en'].noContacts}</p>`; return; }
       let html = '<ul>';
-      contacts.forEach((c, index) => {
-        html += `<li>
-          <span><strong>${c.name}</strong> — ${c.phone}</span>
-          <button class="btn-send" onclick="fillAndSend(${index})">${text[isHindi ? 'hi':'en'].sendLocationBtn}</button>
-        </li>`;
-      });
+      contacts.forEach((c, index) => { html += `<li><span><strong>${c.name}</strong> — ${c.phone}</span><button class="btn-send" onclick="fillAndSend(${index})">${text[isHindi ? 'hi':'en'].sendLocationBtn}</button></li>`; });
       html += '</ul>';
-      contactListDiv.style.display = 'block';
-      contactListDiv.innerHTML = html;
+      contactListDiv.style.display = 'block'; contactListDiv.innerHTML = html;
     }
 
-    function updateContactButtonsText() {
-      const buttons = contactListDiv.querySelectorAll('.btn-send');
-      buttons.forEach(btn => btn.innerText = text[isHindi ? 'hi':'en'].sendLocationBtn);
-    }
+    function updateContactButtonsText() { const buttons = contactListDiv.querySelectorAll('.btn-send'); buttons.forEach(btn => btn.innerText = text[isHindi ? 'hi':'en'].sendLocationBtn); }
 
     async function shareLocation(phone) {
       const lang = isHindi ? 'hi':'en';
@@ -208,10 +218,7 @@
       );
     }
 
-    function fillAndSend(index) {
-      const contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
-      if (contacts[index]) { phoneInput.value = contacts[index].phone; validateInput(); shareLocation(contacts[index].phone); }
-    }
+    function fillAndSend(index) { const contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]'); if (contacts[index]) { phoneInput.value = contacts[index].phone; validateInput(); shareLocation(contacts[index].phone); } }
 
     shareBtn.addEventListener('click', () => { shareLocation(phoneInput.value.trim()); });
 
@@ -227,9 +234,10 @@
       shareBtn.innerText = text[lang].shareBtn;
       document.getElementById('tooltip').innerText = text[lang].tooltip;
       document.getElementById('note').innerText = text[lang].note;
-      translateBtn.innerHTML = `<img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> ${text[lang].translateBtn}`;
+      translateBtn.innerText = text[lang].translateBtn;
       updateContactButtonsText();
     }
-  </script>
-</body>
-</html>
+
+    // Background blur on card hover/focus
+    mainCard.addEventListener('mouseenter', () => { bgVideo.style.filter = 'blur(4px) brightness(0.6)'; videoOverlay.style.background = 'linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45))'; });
+    mainCard.addEventListener('mouseleave', () => { bgVideo.style.filter = 'blur(0px) brightness(1
