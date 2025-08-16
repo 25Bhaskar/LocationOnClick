@@ -65,7 +65,7 @@
 
     <button id="shareBtn" class="btn btn-share">Share Location</button>
 
-    <!-- Papa Section -->
+    <!-- Emergency Section -->
     <div class="row" style="margin-top: 10px; align-items: center;">
       <button id="papaBtn" onclick="callPapa()" style="background:#d32f2f; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; cursor:pointer;">
         📞 Emergency
@@ -92,6 +92,8 @@
     const translateBtn = document.getElementById('translateBtn');
     const papaInput = document.getElementById('papaNumber');
     const papaEditBtn = document.getElementById('papaEditBtn');
+    const papaBtn = document.getElementById('papaBtn');
+    const recentBtn = document.getElementById('recentBtn');
     let isHindi = false;
 
     const text = { 
@@ -117,7 +119,10 @@
         noContacts:"No contacts saved yet.",
         sendLocationBtn:"Send Location",
         deleteBtn:"Delete",
-        translateBtn:"हिंदी"
+        translateBtn:"हिंदी",
+        emergencyBtn:"Emergency",
+        editBtn:"Edit",
+        callRecentBtn:"Call Recently Saved Contact"
       },
       hi:{
         title:"व्हाट्सएप पर मेरी लाइव लोकेशन भेजें",
@@ -141,7 +146,10 @@
         noContacts:"अभी तक कोई संपर्क सहेजा नहीं गया।",
         sendLocationBtn:"लोकेशन भेजें",
         deleteBtn:"हटाएँ",
-        translateBtn:"English"
+        translateBtn:"English",
+        emergencyBtn:"आपातकालीन",
+        editBtn:"सहेजें",
+        callRecentBtn:"हाल ही में सहेजे गए संपर्क को कॉल करें"
       }
     };
 
@@ -254,6 +262,12 @@
       shareBtn.innerText=text[lang].shareBtn; 
       document.getElementById('note').innerText=text[lang].note; 
       translateBtn.innerHTML=`<img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> ${text[lang].translateBtn}`; 
+
+      // Update emergency, edit, and recent buttons
+      papaBtn.innerText = `📞 ${text[lang].emergencyBtn}`;
+      papaEditBtn.innerText = text[lang].editBtn;
+      recentBtn.innerText = `📞 ${text[lang].callRecentBtn}`;
+
       updateContactButtonsText(); 
     }
 
@@ -267,13 +281,13 @@
         papaEditBtn.innerText='Save';
       } else {
         const num=papaInput.value.trim(); 
-        if(/^[0-9]{1,9}$/.test(num)){
+        if(/^[0-9]{1,10}$/.test(num)){
           localStorage.setItem('papa_number',num); 
           flashStatus('Emergency number saved.'); 
           papaInput.disabled=true; 
           papaEditBtn.innerText='Edit';
         } else {
-          flashStatus('Enter a valid 10-digit number for Emergency.',true); 
+          flashStatus('Enter a valid Emergency number.',true); 
           papaInput.focus();
         }
       }
@@ -281,7 +295,7 @@
 
     function callPapa(){
       const num=localStorage.getItem('papa_number'); 
-      if(!num||!/^[0-9]{1,9}$/.test(num)){
+      if(!num||!/^[0-9]{1,10}$/.test(num)){
         flashStatus('No valid Emergency number saved.',true); 
         return;
       } 
