@@ -23,10 +23,22 @@
     .ok { color: #0a7a32; }
     .tooltip { position: relative; display: inline-block; cursor: help; }
     .tooltip .tooltiptext {
-      visibility: hidden; width: 220px; background-color: #333; color: #fff;
-      text-align: center; border-radius: 6px; padding: 6px;
-      position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px;
-      opacity: 0; transition: opacity 0.3s; font-size: 13px;
+      visibility: hidden;
+      width: auto;
+      max-width: 90vw; /* responsive width */
+      background-color: #333; 
+      color: #fff;
+      text-align: center; 
+      border-radius: 6px; 
+      padding: 6px;
+      position: absolute; 
+      z-index: 1; 
+      bottom: 125%; 
+      left: 50%; 
+      transform: translateX(-50%);
+      opacity: 0; 
+      transition: opacity 0.3s; 
+      font-size: 13px;
     }
     .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
     #contactList { margin-top: 16px; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 8px; display: none; }
@@ -38,6 +50,22 @@
     /* Translate Button Style */
     #translateBtn { position: absolute; top: 12px; right: 12px; background: #ff9800; color: #fff; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; }
     #translateBtn img { width: 18px; height: 18px; }
+
+    /* Responsive for small screens */
+    @media (max-width: 480px) {
+      #translateBtn {
+        position: relative;
+        top: 0;
+        right: 0;
+        margin-bottom: 12px;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .card {
+        padding-top: 12px; /* space for button */
+      }
+    }
   </style>
 </head>
 <body>
@@ -154,7 +182,7 @@
       localStorage.setItem('wa_contacts', JSON.stringify(contacts));
       setStatus(text[isHindi ? 'hi':'en'].statusSaved(name));
       phoneInput.value = ''; nameInput.value = ''; validateInput();
-      updateContactButtonsText(); // Update text if list is visible
+      updateContactButtonsText();
     }
 
     function showContacts() {
