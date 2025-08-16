@@ -9,127 +9,162 @@
     .card { background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 520px; }
     h2 { margin: 0 0 12px; }
     p { margin: 0 0 16px; line-height: 1.5; color: #444; }
-    input, button, select { font-size: 16px; }
-    .row { display: flex; gap: 8px; margin-bottom: 10px; }
+    input, button { font-size: 16px; }
+    .row { display: flex; gap: 8px; }
     .row input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd; }
-    select { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd; }
-    .btn { padding: 12px 16px; border: 0; border-radius: 10px; cursor: pointer; }
+    .btn { padding: 14px 18px; border: 0; border-radius: 10px; cursor: pointer; }
     .btn-primary { background: #25D366; color: #fff; font-weight: 600; width: 100%; }
-    .btn-danger { background: #e63946; color: #fff; font-weight: 600; }
+    .btn-save { background: #ccc; color: #fff; font-weight: 600; width: 100%; transition: background 0.3s; }
+    .btn-save.active { background: #007bff; }
     .note { font-size: 13px; color: #666; margin-top: 8px; }
     .status { margin-top: 12px; font-size: 14px; color: #111; }
     .error { color: #b00020; }
     .ok { color: #0a7a32; }
+    ul { margin: 10px 0; padding: 0; list-style: none; }
+    li { background: #f1f1f1; margin: 4px 0; padding: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    li span { flex: 1; }
+    li button { background: #dc3545; color: #fff; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
   </style>
 </head>
 <body>
   <div class="card">
     <h2>Send My Live Location on WhatsApp</h2>
-    <p>Enter the WhatsApp number (with country code, no “+”, no spaces). Example for India: <b>919876543210</b></p>
+    <p>Enter a 10-digit WhatsApp number (no spaces, no +). Example: <b>9876543210</b></p>
 
-    <!-- Input row -->
     <div class="row">
-      <input id="phone" type="tel" placeholder="e.g., 919876543210" inputmode="numeric" />
-      <button class="btn" onclick="saveNumber()">Save</button>
+      <input id="phone" type="tel" maxlength="10" placeholder="e.g., 9876543210" inputmode="numeric" />
+      <button id="saveBtn" class="btn btn-save" onclick="saveContact()" disabled>Save</button>
     </div>
 
-    <!-- Dropdown row -->
-    <div class="row">
-      <select id="savedNumbers">
-        <option value="">-- Select Saved Number --</option>
-      </select>
-      <button class="btn" onclick="loadSelected()">Use</button>
-      <button class="btn btn-danger" onclick="deleteSelected()">Delete</button>
-    </div>
-
-    <!-- Main action -->
     <button class="btn btn-primary" onclick="shareLocation()">Share Location</button>
 
-    <p class="note">Requires location permission. Works best in Chrome/Safari over HTTPS (GitHub Pages is HTTPS).</p>
+    <h3>Saved Numbers</h3>
+    <ul id="contactList"></ul>
+
+    <p class="note">Requires location permission. Works best in Chrome/Safari over HTTPS.</p>
     <div id="status" class="status"></div>
   </div>
 
   <script>
+    const phoneInput = document.getElementById('phone');
+    const saveBtn = document.getElementById('saveBtn');
+    const statusEl = document.getElementById('status');
+    const contactList = document.getElementById('contactList');
+
     function setStatus(msg, isError = false) {
-      const el = document.getElementById('status');
-      el.textContent = msg;
-      el.className = 'status ' + (isError ? 'error' : 'ok');
+      statusEl.textContent = msg;
+      statusEl.className = 'status ' + (isError ? 'error' : 'ok');
     }
 
     function validatePhone(p) {
-      return /^[0-9]{8,15}$/.test(p);
+      return /^[0-9]{10}$/.test(p);
     }
 
-    function getSavedNumbers() {
-      return JSON.parse(localStorage.getItem('wa_numbers') || '[]');
-    }
+    phoneInput.addEventListener('input', () => {
+      if (validatePhone(phoneInput.value)) {
+        saveBtn.disabled = false;
+        saveBtn.classList.add('active');
+      } else {
+        saveBtn.disabled = true;
+        saveBtn.classList.remove('active');
+      }
+    });
 
-    function saveNumber() {
-      const phone = (document.getElementById('phone').value || '').trim();
+    function saveContact() {
+      const phone = phoneInput.value.trim();
       if (!validatePhone(phone)) {
-        setStatus('Enter a valid phone number with country code, digits only.', true);
+        setStatus('❌ Please enter exactly 10 digits before saving.', true);
         return;
       }
-      let numbers = getSavedNumbers();
-      if (!numbers.includes(phone)) numbers.push(phone);
-      localStorage.setItem('wa_numbers', JSON.stringify(numbers));
-      setStatus('Number saved.');
-      populateDropdown();
+
+      let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
+      if (!contacts.includes(phone)) {
+        contacts.push(phone);
+        localStorage.setItem('wa_contacts', JSON.stringify(contacts));
+        renderContacts();
+        setStatus('✅ Number saved successfully.');
+      } else {
+        setStatus('⚠️ Number already saved.');
+      }
+      phoneInput.value = '';
+      saveBtn.disabled = true;
+      saveBtn.classList.remove('active');
     }
 
-    function populateDropdown() {
-      const dropdown = document.getElementById('savedNumbers');
-      dropdown.innerHTML = '<option value="">-- Select Saved Number --</option>';
-      getSavedNumbers().forEach(num => {
-        const opt = document.createElement('option');
-        opt.value = num;
-        opt.textContent = num;
-        dropdown.appendChild(opt);
+    function renderContacts() {
+      contactList.innerHTML = '';
+      let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
+      contacts = contacts.filter(c => validatePhone(c));
+      localStorage.setItem('wa_contacts', JSON.stringify(contacts));
+
+      contacts.forEach(num => {
+        const li = document.createElement('li');
+
+        const span = document.createElement('span');
+        span.textContent = num;
+
+        // ✅ Single click fills input
+        span.onclick = () => selectContact(num);
+
+        // ✅ Double click directly shares location
+        span.ondblclick = () => directShare(num);
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          deleteContact(num);
+        };
+
+        li.appendChild(span);
+        li.appendChild(delBtn);
+        contactList.appendChild(li);
       });
     }
 
-    function loadSelected() {
-      const selected = document.getElementById('savedNumbers').value;
-      if (selected) {
-        document.getElementById('phone').value = selected;
-        setStatus('Number loaded from saved list.');
-      } else {
-        setStatus('No number selected.', true);
+    function selectContact(num) {
+      phoneInput.value = num;
+      if (validatePhone(num)) {
+        saveBtn.disabled = false;
+        saveBtn.classList.add('active');
       }
+      setStatus('📲 Number selected: ' + num);
     }
 
-    function deleteSelected() {
-      const selected = document.getElementById('savedNumbers').value;
-      if (!selected) {
-        setStatus('No number selected to delete.', true);
-        return;
-      }
-      if (!confirm(`Are you sure you want to delete ${selected}?`)) {
-        setStatus('Delete cancelled.');
-        return;
-      }
-      let numbers = getSavedNumbers();
-      numbers = numbers.filter(num => num !== selected);
-      localStorage.setItem('wa_numbers', JSON.stringify(numbers));
-      populateDropdown();
-      setStatus('Number deleted.');
+    function deleteContact(num) {
+      let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
+      contacts = contacts.filter(c => c !== num);
+      localStorage.setItem('wa_contacts', JSON.stringify(contacts));
+      renderContacts();
+      setStatus('🗑️ Number deleted.');
     }
 
     async function shareLocation() {
-      const phone = (document.getElementById('phone').value || '').trim();
+      const phone = phoneInput.value.trim();
       if (!validatePhone(phone)) {
-        setStatus('Enter a valid phone number with country code, digits only.', true);
+        setStatus('❌ Please enter exactly 10 digits before sharing.', true);
         return;
       }
+      sendLocation(phone);
+    }
 
+    function directShare(num) {
+      setStatus('🚀 Direct sharing with ' + num);
+      sendLocation(num);
+    }
+
+    function sendLocation(phone) {
+      if (!('geolocation' in navigator)) {
+        setStatus('Geolocation not supported by this browser.', true);
+        return;
+      }
       setStatus('Getting location… please allow permission.');
-
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = pos.coords.latitude.toFixed(6);
           const lng = pos.coords.longitude.toFixed(6);
           const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
-          const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent('My Live Location: ' + mapsLink)}`;
+          const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent('My Live Location: ' + mapsLink)}`;
           setStatus('Opening WhatsApp…');
           location.href = waUrl;
         },
@@ -144,7 +179,7 @@
       );
     }
 
-    populateDropdown();
+    renderContacts();
   </script>
 </body>
 </html>
