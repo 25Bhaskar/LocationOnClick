@@ -82,6 +82,20 @@
     <button id="recentBtn" onclick="callRecent()" style="background:#4caf50; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; margin-top:10px; cursor:pointer;">
       📞 Call Recently Saved Contact
     </button>
+
+    <!-- Voice Message Section -->
+    <div class="card" style="margin-top:20px;">
+      <h2 id="voiceTitle">Voice Message</h2>
+      <p class="note" id="voiceNote">Send a voice message via WhatsApp</p>
+
+      <div class="row" style="align-items: center;">
+        <input id="voiceNumber" type="tel" maxlength="10" placeholder="Enter Number" inputmode="numeric" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ddd;" />
+        <button id="voiceSendBtn" class="btn btn-send" style="margin-left:6px;">Send</button>
+      </div>
+
+      <div id="voiceStatus" class="status"></div>
+    </div>
+
   </div>
 
   <script>
@@ -94,6 +108,11 @@
     const papaEditBtn = document.getElementById('papaEditBtn');
     const papaBtn = document.getElementById('papaBtn');
     const recentBtn = document.getElementById('recentBtn');
+    const voiceSendBtn = document.getElementById('voiceSendBtn');
+    const voiceInput = document.getElementById('voiceNumber');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const voiceTitle = document.getElementById('voiceTitle');
+    const voiceNote = document.getElementById('voiceNote');
     let isHindi = false;
 
     const text = { 
@@ -122,7 +141,10 @@
         translateBtn:"हिंदी",
         emergencyBtn:"Emergency",
         editBtn:"Edit",
-        callRecentBtn:"Call Recently Saved Contact"
+        callRecentBtn:"Call Recently Saved Contact",
+        voiceTitle:"Voice Message",
+        voiceNote:"Send a voice message via WhatsApp",
+        voiceBtn:"Send"
       },
       hi:{
         title:"व्हाट्सएप पर मेरी लाइव लोकेशन भेजें",
@@ -149,15 +171,24 @@
         translateBtn:"English",
         emergencyBtn:"आपातकालीन",
         editBtn:"सहेजें",
-        callRecentBtn:"हाल ही में सहेजे गए संपर्क को कॉल करें"
+        callRecentBtn:"हाल ही में सहेजे गए संपर्क को कॉल करें",
+        voiceTitle:"वॉइस मैसेज",
+        voiceNote:"व्हाट्सएप पर वॉइस मैसेज भेजें",
+        voiceBtn:"भेजें"
       }
     };
 
+    // Helper Functions
     function flashStatus(msg,isError=false,duration=3000){
       const el=document.getElementById('status');
       el.textContent=msg;
       el.className='status '+(isError?'error':'ok');
       setTimeout(()=>{el.textContent='';},duration);
+    }
+    function flashVoiceStatus(msg,isError=false,duration=3000){
+      voiceStatus.textContent=msg;
+      voiceStatus.className='status '+(isError?'error':'ok');
+      setTimeout(()=>{ voiceStatus.textContent = ''; }, duration);
     }
 
     function validatePhone(p){return /^[0-9]{10}$/.test(p);}
@@ -250,6 +281,27 @@
 
     shareBtn.addEventListener('click',()=>{shareLocation(phoneInput.value.trim());});
 
+    // Voice Message
+    voiceSendBtn.addEventListener('click', () => {
+      const num = voiceInput.value.trim();
+      if (!validatePhone(num)) {
+        flashVoiceStatus(isHindi ? 'कृपया 10-अंकों का सही नंबर दर्ज करें।' : 'Enter a valid 10-digit number.', true);
+        return;
+      }
+      const msg = isHindi ? "आपके लिए नया वॉइस मैसेज 🎤" : "You have a new voice message 🎤";
+      const waUrl = `https://wa.me/91${num}?text=${encodeURIComponent(msg)}`;
+      flashVoiceStatus(isHindi ? 'WhatsApp खोला जा रहा है…' : 'Opening WhatsApp...');
+      window.open(waUrl, '_blank');
+      voiceInput.value = '';
+    });
+
+    function updateVoiceText(){
+      const lang = isHindi ? 'hi' : 'en';
+      voiceTitle.innerText = text[lang].voiceTitle;
+      voiceNote.innerText = text[lang].voiceNote;
+      voiceSendBtn.innerText = text[lang].voiceBtn;
+    }
+
     function toggleLanguage(){
       isHindi=!isHindi; 
       const lang=isHindi?'hi':'en'; 
@@ -263,12 +315,13 @@
       document.getElementById('note').innerText=text[lang].note; 
       translateBtn.innerHTML=`<img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> ${text[lang].translateBtn}`; 
 
-      // Update emergency, edit, and recent buttons
+      // Update emergency, edit, recent
       papaBtn.innerText = `📞 ${text[lang].emergencyBtn}`;
       papaEditBtn.innerText = text[lang].editBtn;
       recentBtn.innerText = `📞 ${text[lang].callRecentBtn}`;
 
-      updateContactButtonsText(); 
+      updateContactButtonsText();
+      updateVoiceText();
     }
 
     const savedPapa=localStorage.getItem('papa_number'); 
