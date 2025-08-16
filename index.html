@@ -32,23 +32,24 @@
     .btn-send:hover { opacity: 0.9; }
 
     /* Translate Button Style */
-    #translateBtn { position: absolute; top: 5px; background: #ff9800; color: #fff; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; }
-    #translateHint { font-size:12px; color:#555; margin-top:4px; text-align:center; }
+    #translateBtn { background: #ff9800; color: #fff; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; padding: 8px 12px; }
     #translateBtn img { width: 18px; height: 18px; }
 
     /* Responsive for small screens */
     @media (max-width: 480px) {
-      #translateBtn { position: relative; top: 0; right: 0; margin-bottom: 4px; width: 100%; justify-content: center; }
       .card { padding-top: 12px; }
+      #translateContainer { flex-direction: column; align-items: flex-start; gap: 4px; }
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <button id="translateBtn" onclick="toggleLanguage()">
-      <img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> Kannada
-    </button>
-    <p id="translateHint">Press to switch the language preferences</p>
+    <div id="translateContainer" style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <button id="translateBtn" onclick="toggleLanguage()">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> Kannada
+      </button>
+      <span id="translateHint" style="font-size:12px; color:#555;">Press to switch the language preferences</span>
+    </div>
 
     <h2 id="title">Send My Live Location on WhatsApp</h2>
     <p class="note" id="note">Requires location permission from your device</p>
@@ -97,9 +98,8 @@
     const papaBtn = document.getElementById('papaBtn');
     const recentBtn = document.getElementById('recentBtn');
 
-    // Languages order
     const languages = ['en','hi','kn','pa'];
-    let langState = 0; // Start with English
+    let langState = 0;
 
     const text = {
       en:{ title:"Send My Live Location on WhatsApp", description:"Enter details and share live location instantly.", namePlaceholder:"Enter Name (optional)", phonePlaceholder:"10-digit mobile number", btnSave:"Save Contact", btnCheck:"Check Saved Contacts", shareBtn:"Share Location", note:"Requires location permission.", statusSaved:name=>`Saved: ${name}`, statusEnterValid:"Enter a valid 10-digit number before saving.", statusInvalidPhone:"Enter a valid 10-digit mobile number.", statusGeoUnsupported:"Geolocation not supported by this browser.", statusGettingLocation:"Getting location… please allow permission.", statusOpeningWhatsApp:"Opening WhatsApp…", statusGeoFail:"Failed to get location.", statusPermissionDenied:"Location permission denied. Allow it and try again.", statusPositionUnavailable:"Position unavailable. Try enabling GPS or moving outdoors.", statusTimeout:"Location request timed out. Try again.", noContacts:"No contacts saved yet.", sendLocationBtn:"Send Location", deleteBtn:"Delete", translateBtn:"Kannada", emergencyBtn:"Emergency", editBtn:"Edit", callRecentBtn:"Call Recently Saved Contact", papaPlaceholder:"Enter Emergency Number" },
@@ -108,7 +108,6 @@
       pa:{ title:"ਵਟਸਐਪ 'ਤੇ ਮੇਰੀ ਲਾਈਵ ਲੋਕੇਸ਼ਨ ਭੇਜੋ", description:"ਵੇਰਵਾ ਦਰਜ ਕਰੋ ਅਤੇ ਤੁਰੰਤ ਲਾਈਵ ਲੋਕੇਸ਼ਨ ਸਾਂਝੀ ਕਰੋ।", namePlaceholder:"ਨਾਂ ਦਰਜ ਕਰੋ (ਵਿਕਲਪਿਕ)", phonePlaceholder:"10 ਅੰਕਾਂ ਵਾਲਾ ਮੋਬਾਈਲ ਨੰਬਰ", btnSave:"ਸੰਪਰਕ ਸੇਵ ਕਰੋ", btnCheck:"ਸੰਭਾਲੇ ਸੰਪਰਕ ਵੇਖੋ", shareBtn:"ਲੋਕੇਸ਼ਨ ਸਾਂਝੀ ਕਰੋ", note:"ਲੋਕੇਸ਼ਨ ਅਨੁਮਤੀ ਲੋੜੀਂਦੀ ਹੈ।", statusSaved:name=>`ਸੰਭਾਲਿਆ ਗਿਆ: ${name}`, statusEnterValid:"ਕਿਰਪਾ ਕਰਕੇ 10 ਅੰਕਾਂ ਵਾਲਾ ਸਹੀ ਨੰਬਰ ਦਰਜ ਕਰੋ।", statusInvalidPhone:"ਕਿਰਪਾ ਕਰਕੇ 10 ਅੰਕਾਂ ਵਾਲਾ ਸਹੀ ਮੋਬਾਈਲ ਨੰਬਰ ਦਰਜ ਕਰੋ।", statusGeoUnsupported:"ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵੱਲੋਂ ਜਿਓਲੋਕੇਸ਼ਨ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ।", statusGettingLocation:"ਲੋਕੇਸ਼ਨ ਪ੍ਰਾਪਤ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ… ਕਿਰਪਾ ਕਰਕੇ ਅਨੁਮਤੀ ਦਿਓ।", statusOpeningWhatsApp:"Whatsapp ਖੋਲ੍ਹਿਆ ਜਾ ਰਿਹਾ ਹੈ…", statusGeoFail:"ਲੋਕੇਸ਼ਨ ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ।", statusPermissionDenied:"ਲੋਕੇਸ਼ਨ ਅਨੁਮਤੀ ਰੱਦ। ਕਿਰਪਾ ਕਰਕੇ ਅਨੁਮਤੀ ਦਿਓ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।", statusPositionUnavailable:"ਸਥਿਤੀ ਉਪਲਬਧ ਨਹੀਂ। GPS ਚਾਲੂ ਕਰੋ ਜਾਂ ਬਾਹਰ ਜਾਓ।", statusTimeout:"ਲੋਕੇਸ਼ਨ ਅਨੁਰੋਧ ਸਮਾਪਤ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।", noContacts:"ਕੋਈ ਸੰਪਰਕ ਸੇਵ ਨਹੀਂ ਕੀਤਾ ਗਿਆ।", sendLocationBtn:"ਲੋਕੇਸ਼ਨ ਭੇਜੋ", deleteBtn:"ਹਟਾਓ", translateBtn:"हिंदी", emergencyBtn:"ਐਮਰਜੈਂਸੀ", editBtn:"ਸੰਭਾਲੋ", callRecentBtn:"ਹਾਲ ਹੀ ਵਿੱਚ ਸੇਵ ਕੀਤੇ ਸੰਪਰਕ ਨੂੰ ਕਾਲ ਕਰੋ", papaPlaceholder:"ਐਮਰਜੈਂਸੀ ਨੰਬਰ ਦਰਜ ਕਰੋ" }
     };
 
-    // Utility functions
     function flashStatus(msg,isError=false,duration=3000){
       const el=document.getElementById('status');
       el.textContent=msg;
@@ -117,10 +116,7 @@
     }
 
     function validatePhone(p){return /^[0-9]{10}$/.test(p);}
-    function validateInput(){
-      if(validatePhone(phoneInput.value.trim())) shareBtn.classList.add('active'); 
-      else shareBtn.classList.remove('active');
-    }
+    function validateInput(){if(validatePhone(phoneInput.value.trim())) shareBtn.classList.add('active'); else shareBtn.classList.remove('active');}
     phoneInput.addEventListener('input',validateInput);
 
     function saveContact(){
@@ -151,7 +147,7 @@
             <button class="btn-send delete" onclick="deleteContact(${index})">${text[lang].deleteBtn}</button>
           </div>
         </li>`;
-      }); 
+      });
       html+='</ul>'; 
       contactListDiv.style.display='block'; 
       contactListDiv.innerHTML=html;
@@ -160,9 +156,7 @@
     function updateContactButtonsText(){
       const lang = languages[langState];
       const buttons = contactListDiv.querySelectorAll('.btn-send');
-      buttons.forEach(btn=>{
-        btn.innerText = btn.classList.contains('delete') ? text[lang].deleteBtn : text[lang].sendLocationBtn;
-      });
+      buttons.forEach(btn=>{btn.innerText = btn.classList.contains('delete') ? text[lang].deleteBtn : text[lang].sendLocationBtn;});
     }
 
     async function shareLocation(phone){
@@ -176,104 +170,56 @@
         const mapsLink=`https://maps.google.com/?q=${lat},${lng}`; 
         const msg=(lang==='hi')?`मेरी वर्तमान लोकेशन है: ${mapsLink}`:(lang==='kn')?`ನನ್ನ ಪ್ರಸ್ತುತ ಸ್ಥಳ ಇಲ್ಲಿದೆ: ${mapsLink}`:(lang==='pa')?`ਮੇਰੀ ਮੌਜੂਦਾ ਲੋਕੇਸ਼ਨ ਹੈ: ${mapsLink}`:`My current location is: ${mapsLink}`;
         const waUrl=`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`; 
-        flashStatus(text[lang].statusOpeningWhatsApp); 
         window.open(waUrl,'_blank'); 
-        contactListDiv.style.display='none';
+        flashStatus(text[lang].statusOpeningWhatsApp);
       },err=>{
-        let msg=text[lang].statusGeoFail; 
-        if(err.code===1) msg=text[lang].statusPermissionDenied; 
-        if(err.code===2) msg=text[lang].statusPositionUnavailable; 
-        if(err.code===3) msg=text[lang].statusTimeout; 
+        let msg=text[lang].statusGeoFail;
+        if(err.code===1) msg=text[lang].statusPermissionDenied;
+        if(err.code===2) msg=text[lang].statusPositionUnavailable;
+        if(err.code===3) msg=text[lang].statusTimeout;
         flashStatus(msg,true);
-      },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+      },{timeout:15000,enableHighAccuracy:true});
     }
 
     function fillAndSend(index){
-      const contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
-      if(contacts[index]){
-        phoneInput.value=contacts[index].phone; 
-        validateInput(); 
-        shareLocation(contacts[index].phone);
-      }
-    }
-
-    shareBtn.addEventListener('click',()=>{shareLocation(phoneInput.value.trim());});
-
-    function toggleLanguage(){
-      const current = languages[langState];
-      const nextLangMap = { en:'kn', hi:'en', kn:'pa', pa:'hi' };
-      const next = nextLangMap[current];
-      langState = languages.indexOf(next);
-      const lang = languages[langState];
-
-      // Update all texts
-      document.getElementById('title').innerText = text[lang].title;
-      document.getElementById('description').innerText = text[lang].description;
-      document.getElementById('name').placeholder = text[lang].namePlaceholder;
-      document.getElementById('phone').placeholder = text[lang].phonePlaceholder;
-      document.getElementById('btnSave').innerText = text[lang].btnSave;
-      document.getElementById('btnCheck').innerText = text[lang].btnCheck;
-      shareBtn.innerText = text[lang].shareBtn;
-      document.getElementById('note').innerText = text[lang].note;
-      papaBtn.innerText = `📞 ${text[lang].emergencyBtn}`;
-      papaEditBtn.innerText = text[lang].editBtn;
-      papaInput.placeholder = text[lang].papaPlaceholder;
-      recentBtn.innerText = `📞 ${text[lang].callRecentBtn}`;
-      updateContactButtonsText();
-
-      // Update button to show next language
-      translateBtn.innerHTML = `<img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> ${text[next].translateBtn}`;
-    }
-
-    // Emergency number handling
-    const savedPapa=localStorage.getItem('papa_number'); 
-    if(savedPapa) papaInput.value=savedPapa;
-
-    function togglePapaEdit(){
-      if(papaInput.disabled){
-        papaInput.disabled=false; 
-        papaInput.focus(); 
-        papaEditBtn.innerText='Save';
-      } else {
-        const num=papaInput.value.trim(); 
-        if(/^[0-9]{1,10}$/.test(num)){
-          localStorage.setItem('papa_number',num); 
-          flashStatus('Emergency number saved.'); 
-          papaInput.disabled=true; 
-          papaEditBtn.innerText='Edit';
-        } else {
-          flashStatus('Enter a valid Emergency number.',true); 
-          papaInput.focus();
-        }
-      }
-    }
-
-    function callPapa(){
-      const num=localStorage.getItem('papa_number'); 
-      if(!num||!/^[0-9]{1,10}$/.test(num)){
-        flashStatus('No valid Emergency number saved.',true); 
-        return;
-      } 
-      window.location.href=`tel:+91${num}`;
-    }
-
-    function callRecent(){
-      const contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
-      if(contacts.length===0){flashStatus('No saved contacts to call.',true); return;} 
-      const recentNumber=contacts[contacts.length-1].phone; 
-      if(!/^[0-9]{10}$/.test(recentNumber)){flashStatus('Saved contact number is invalid.',true); return;} 
-      window.location.href=`tel:+91${recentNumber}`;
+      let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
+      shareLocation(contacts[index].phone);
     }
 
     function deleteContact(index){
       let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
-      if(contacts[index]){
-        const removed=contacts.splice(index,1); 
-        localStorage.setItem('wa_contacts',JSON.stringify(contacts)); 
-        flashStatus(`Deleted: ${removed[0].name}`); 
-        showContacts();
-      }
+      contacts.splice(index,1); 
+      localStorage.setItem('wa_contacts',JSON.stringify(contacts)); 
+      showContacts();
     }
+
+    function toggleLanguage(){
+      langState=(langState+1)%languages.length;
+      const lang=languages[langState];
+      document.getElementById('title').textContent=text[lang].title;
+      document.getElementById('description').textContent=text[lang].description;
+      document.getElementById('note').textContent=text[lang].note;
+      document.getElementById('name').placeholder=text[lang].namePlaceholder;
+      document.getElementById('phone').placeholder=text[lang].phonePlaceholder;
+      document.getElementById('btnSave').textContent=text[lang].btnSave;
+      document.getElementById('btnCheck').textContent=text[lang].btnCheck;
+      shareBtn.textContent=text[lang].shareBtn;
+      translateBtn.innerHTML=`<img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> ${text[lang].translateBtn}`;
+      papaBtn.textContent = "📞 "+text[lang].emergencyBtn;
+      papaEditBtn.textContent = text[lang].editBtn;
+      recentBtn.textContent = "📞 "+text[lang].callRecentBtn;
+      papaInput.placeholder = text[lang].papaPlaceholder;
+      updateContactButtonsText();
+    }
+
+    shareBtn.addEventListener('click',()=>{shareLocation(phoneInput.value.trim());});
+
+    // Emergency Call Button
+    function togglePapaEdit(){papaInput.disabled=!papaInput.disabled; if(!papaInput.disabled) papaInput.focus();}
+    function callPapa(){const n=papaInput.value.trim(); if(validatePhone(n)) window.open(`tel:${n}`); else flashStatus("Enter valid emergency number",true);}
+    
+    // Recent Call
+    function callRecent(){let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); if(contacts.length>0){const recent=contacts[contacts.length-1]; window.open(`tel:${recent.phone}`);}else{flashStatus("No contact saved",true);}}
   </script>
 </body>
 </html>
