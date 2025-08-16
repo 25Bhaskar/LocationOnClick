@@ -78,10 +78,7 @@
 </head>
 <body>
   <div class="card">
-    <!-- Panic Button -->
-    <button id="panicBtn" onclick="triggerPanic()" title="Emergency! Call saved contact immediately">🚨 Panic</button>
-
-    <!-- Translate Button -->
+      <!-- Translate Button -->
     <button id="translateBtn" onclick="toggleLanguage()">
       <img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> हिंदी
     </button>
@@ -108,6 +105,9 @@
     <div class="row" style="margin-top: 10px !important;">
       <input id="panicContact" type="tel" maxlength="10" placeholder="Save Panic Contact Number" inputmode="numeric" />
     </div>
+
+    <!-- Panic Button -->
+    <button id="panicBtn" onclick="triggerPanic()" title="Emergency! Call saved contact immediately">🚨 Panic</button>
 
     <p class="note" id="note">Requires location permission.</p>
     <div id="status" class="status"></div>
