@@ -169,7 +169,7 @@
 
     function saveContact(){
       const phone=phoneInput.value.trim(); 
-      const name=nameInput.value.trim()||"Unnamed"; 
+      const name=nameInput.value.trim()||"Un-known"; 
       if(!validatePhone(phone)){flashStatus(text[isHindi?'hi':'en'].statusEnterValid,true); return;} 
       let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
       contacts.push({name,phone}); 
