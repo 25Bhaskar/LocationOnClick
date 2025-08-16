@@ -32,23 +32,24 @@
     .btn-send:hover { opacity: 0.9; }
 
     /* Translate Button Style */
-    #translateBtn { background: #ff9800; color: #fff; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; padding: 8px 12px; }
-    #translateBtn img { width: 18px; height: 18px; }
+    #translateWrapper { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    #translateBtn { background: #ff9800; color: #fff; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; padding: 6px 10px; }
+    #translateHint { font-size:12px; color:#555; }
 
     /* Responsive for small screens */
     @media (max-width: 480px) {
+      #translateWrapper { flex-direction: column; gap:4px; align-items:flex-start; }
       .card { padding-top: 12px; }
-      #translateContainer { flex-direction: column; align-items: flex-start; gap: 4px; }
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <div id="translateContainer" style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+    <div id="translateWrapper">
       <button id="translateBtn" onclick="toggleLanguage()">
         <img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> Kannada
       </button>
-      <span id="translateHint" style="font-size:12px; color:#555;">Press to switch the language preferences</span>
+      <span id="translateHint">Press to switch the language preferences</span>
     </div>
 
     <h2 id="title">Send My Live Location on WhatsApp</h2>
@@ -68,7 +69,6 @@
 
     <button id="shareBtn" class="btn btn-share">Share Location</button>
 
-    <!-- Emergency Section -->
     <div class="row" style="margin-top: 10px; align-items: center;">
       <button id="papaBtn" onclick="callPapa()" style="background:#d32f2f; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; cursor:pointer;">
         📞 Emergency
@@ -98,14 +98,14 @@
     const papaBtn = document.getElementById('papaBtn');
     const recentBtn = document.getElementById('recentBtn');
 
-    const languages = ['en','hi','kn','pa'];
+    const languages = ['en','kn','pa','hi']; // English → Kannada → Punjabi → Hindi
     let langState = 0;
 
     const text = {
-      en:{ title:"Send My Live Location on WhatsApp", description:"Enter details and share live location instantly.", namePlaceholder:"Enter Name (optional)", phonePlaceholder:"10-digit mobile number", btnSave:"Save Contact", btnCheck:"Check Saved Contacts", shareBtn:"Share Location", note:"Requires location permission.", statusSaved:name=>`Saved: ${name}`, statusEnterValid:"Enter a valid 10-digit number before saving.", statusInvalidPhone:"Enter a valid 10-digit mobile number.", statusGeoUnsupported:"Geolocation not supported by this browser.", statusGettingLocation:"Getting location… please allow permission.", statusOpeningWhatsApp:"Opening WhatsApp…", statusGeoFail:"Failed to get location.", statusPermissionDenied:"Location permission denied. Allow it and try again.", statusPositionUnavailable:"Position unavailable. Try enabling GPS or moving outdoors.", statusTimeout:"Location request timed out. Try again.", noContacts:"No contacts saved yet.", sendLocationBtn:"Send Location", deleteBtn:"Delete", translateBtn:"Kannada", emergencyBtn:"Emergency", editBtn:"Edit", callRecentBtn:"Call Recently Saved Contact", papaPlaceholder:"Enter Emergency Number" },
-      hi:{ title:"व्हाट्सएप पर मेरी लाइव लोकेशन भेजें", description:"विवरण दर्ज करें और तुरंत लाइव लोकेशन साझा करें।", namePlaceholder:"नाम दर्ज करें (वैकल्पिक)", phonePlaceholder:"10-अंकों का मोबाइल नंबर", btnSave:"संपर्क सहेजें", btnCheck:"सहेजे गए संपर्क देखें", shareBtn:"लोकेशन साझा करें", note:"लोकेशन अनुमति आवश्यक है।", statusSaved:name=>`सहेजा गया: ${name}`, statusEnterValid:"कृपया 10 अंकों का सही नंबर दर्ज करें।", statusInvalidPhone:"कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें।", statusGeoUnsupported:"इस ब्राउज़र में जियोलोकेशन समर्थित नहीं है।", statusGettingLocation:"लोकेशन प्राप्त की जा रही है… अनुमति दें।", statusOpeningWhatsApp:"WhatsApp खोला जा रहा है…", statusGeoFail:"लोकेशन प्राप्त करने में विफल।", statusPermissionDenied:"लोकेशन अनुमति अस्वीकृत। अनुमति दें और पुनः प्रयास करें।", statusPositionUnavailable:"स्थिति उपलब्ध नहीं। GPS सक्षम करें या बाहर जाएँ।", statusTimeout:"लोकेशन अनुरोध समय समाप्त। पुनः प्रयास करें।", noContacts:"अभी तक कोई संपर्क सहेजा नहीं गया।", sendLocationBtn:"लोकेशन भेजें", deleteBtn:"हटाएँ", translateBtn:"English", emergencyBtn:"आपातकालीन", editBtn:"सहेजें", callRecentBtn:"हाल ही में सहेजे गए संपर्क को कॉल करें", papaPlaceholder:"आपातकालीन नंबर दर्ज करें" },
-      kn:{ title:"Whatsapp ನಲ್ಲಿ ನನ್ನ ಲೈವ್ ಲೊಕೆಶನ್ ಕಳುಹಿಸಿ", description:"ವಿವರಗಳನ್ನು ನಮೂದಿಸಿ ಮತ್ತು ಲೈವ್ ಲೊಕೆಶನ್ ತಕ್ಷಣ ಹಂಚಿಕೊಳ್ಳಿ.", namePlaceholder:"ಹೆಸರು ನಮೂದಿಸಿ (ಐಚ್ಛಿಕ)", phonePlaceholder:"10 ಅಂಕೆಗಳ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ", btnSave:"ಸಂಪರ್ಕವನ್ನು ಉಳಿಸಿ", btnCheck:"ಉಳಿಸಿದ ಸಂಪರ್ಕಗಳನ್ನು ನೋಡಿ", shareBtn:"ಲೊಕೆಶನ್ ಹಂಚಿಕೊಳ್ಳಿ", note:"ಸ್ಥಳಾಂತರ ಅನುಮತಿ ಅಗತ್ಯವಿದೆ.", statusSaved:name=>`ಉಳಿಸಲಾಗಿದೆ: ${name}`, statusEnterValid:"ದಯವಿಟ್ಟು 10 ಅಂಕೆಗಳ ಸರಿಯಾದ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ.", statusInvalidPhone:"ದಯವಿಟ್ಟು 10 ಅಂಕೆಗಳ ಸರಿಯಾದ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ.", statusGeoUnsupported:"ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಜಿಯೊಲೊಕೆಶನ್ ಬೆಂಬಲಿತವಲ್ಲ.", statusGettingLocation:"ಸ್ಥಳಾಂತರ ಪಡೆಯಲಾಗುತ್ತಿದೆ… ದಯವಿಟ್ಟು ಅನುಮತಿಸು.", statusOpeningWhatsApp:"Whatsapp ತೆರೆಯಲಾಗುತ್ತಿದೆ…", statusGeoFail:"ಸ್ಥಳಾಂತರ ಪಡೆಯಲು ವಿಫಲವಾಗಿದೆ.", statusPermissionDenied:"ಸ್ಥಳಾಂತರ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. ಅನುಮತಿಸಿ ಮತ್ತು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", statusPositionUnavailable:"ಸ್ಥಿತಿ ಲಭ್ಯವಿಲ್ಲ. GPS ಸಕ್ರಿಯಗೊಳಿಸಿ ಅಥವಾ ಹೊರಗೆ ಹೋಗಿ.", statusTimeout:"ಸ್ಥಳಾಂತರ ವಿನಂತಿ ಸಮಯಾವಧಿ ಮುಗಿದಿದೆ. ಪುನಃ ಪ್ರಯತ್ನಿಸಿ.", noContacts:"ಇಲ್ಲಾ ಸಂಪರ್ಕಗಳು ಉಳಿಸಲಾಗಿದೆ.", sendLocationBtn:"ಲೊಕೆಶನ್ ಕಳುಹಿಸಿ", deleteBtn:"ಅಳಿಸಿ", translateBtn:"ਪੰਜਾਬੀ", emergencyBtn:"ಅಪಘಾತ", editBtn:"ಉಳಿಸಿ", callRecentBtn:"ಇತ್ತೀಚೆಗೆ ಉಳಿಸಿದ ಸಂಪರ್ಕಕ್ಕೆ ಕರೆಮಾಡಿ", papaPlaceholder:"ಅಪಘಾತ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ" },
-      pa:{ title:"ਵਟਸਐਪ 'ਤੇ ਮੇਰੀ ਲਾਈਵ ਲੋਕੇਸ਼ਨ ਭੇਜੋ", description:"ਵੇਰਵਾ ਦਰਜ ਕਰੋ ਅਤੇ ਤੁਰੰਤ ਲਾਈਵ ਲੋਕੇਸ਼ਨ ਸਾਂਝੀ ਕਰੋ।", namePlaceholder:"ਨਾਂ ਦਰਜ ਕਰੋ (ਵਿਕਲਪਿਕ)", phonePlaceholder:"10 ਅੰਕਾਂ ਵਾਲਾ ਮੋਬਾਈਲ ਨੰਬਰ", btnSave:"ਸੰਪਰਕ ਸੇਵ ਕਰੋ", btnCheck:"ਸੰਭਾਲੇ ਸੰਪਰਕ ਵੇਖੋ", shareBtn:"ਲੋਕੇਸ਼ਨ ਸਾਂਝੀ ਕਰੋ", note:"ਲੋਕੇਸ਼ਨ ਅਨੁਮਤੀ ਲੋੜੀਂਦੀ ਹੈ।", statusSaved:name=>`ਸੰਭਾਲਿਆ ਗਿਆ: ${name}`, statusEnterValid:"ਕਿਰਪਾ ਕਰਕੇ 10 ਅੰਕਾਂ ਵਾਲਾ ਸਹੀ ਨੰਬਰ ਦਰਜ ਕਰੋ।", statusInvalidPhone:"ਕਿਰਪਾ ਕਰਕੇ 10 ਅੰਕਾਂ ਵਾਲਾ ਸਹੀ ਮੋਬਾਈਲ ਨੰਬਰ ਦਰਜ ਕਰੋ।", statusGeoUnsupported:"ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵੱਲੋਂ ਜਿਓਲੋਕੇਸ਼ਨ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ।", statusGettingLocation:"ਲੋਕੇਸ਼ਨ ਪ੍ਰਾਪਤ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ… ਕਿਰਪਾ ਕਰਕੇ ਅਨੁਮਤੀ ਦਿਓ।", statusOpeningWhatsApp:"Whatsapp ਖੋਲ੍ਹਿਆ ਜਾ ਰਿਹਾ ਹੈ…", statusGeoFail:"ਲੋਕੇਸ਼ਨ ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ।", statusPermissionDenied:"ਲੋਕੇਸ਼ਨ ਅਨੁਮਤੀ ਰੱਦ। ਕਿਰਪਾ ਕਰਕੇ ਅਨੁਮਤੀ ਦਿਓ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।", statusPositionUnavailable:"ਸਥਿਤੀ ਉਪਲਬਧ ਨਹੀਂ। GPS ਚਾਲੂ ਕਰੋ ਜਾਂ ਬਾਹਰ ਜਾਓ।", statusTimeout:"ਲੋਕੇਸ਼ਨ ਅਨੁਰੋਧ ਸਮਾਪਤ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।", noContacts:"ਕੋਈ ਸੰਪਰਕ ਸੇਵ ਨਹੀਂ ਕੀਤਾ ਗਿਆ।", sendLocationBtn:"ਲੋਕੇਸ਼ਨ ਭੇਜੋ", deleteBtn:"ਹਟਾਓ", translateBtn:"हिंदी", emergencyBtn:"ਐਮਰਜੈਂਸੀ", editBtn:"ਸੰਭਾਲੋ", callRecentBtn:"ਹਾਲ ਹੀ ਵਿੱਚ ਸੇਵ ਕੀਤੇ ਸੰਪਰਕ ਨੂੰ ਕਾਲ ਕਰੋ", papaPlaceholder:"ਐਮਰਜੈਂਸੀ ਨੰਬਰ ਦਰਜ ਕਰੋ" }
+      en:{ title:"Send My Live Location on WhatsApp", description:"Enter details and share live location instantly.", namePlaceholder:"Enter Name (optional)", phonePlaceholder:"10-digit mobile number", btnSave:"Save Contact", btnCheck:"Check Saved Contacts", shareBtn:"Share Location", note:"Requires location permission.", translateBtn:"Kannada", emergencyBtn:"Emergency", editBtn:"Edit", callRecentBtn:"Call Recently Saved Contact", papaPlaceholder:"Enter Emergency Number", statusSaved:name=>`Saved: ${name}`, statusEnterValid:"Enter a valid 10-digit number before saving.", statusInvalidPhone:"Enter a valid 10-digit mobile number.", statusGeoUnsupported:"Geolocation not supported by this browser.", statusGettingLocation:"Getting location… please allow permission.", statusOpeningWhatsApp:"Opening WhatsApp…", statusGeoFail:"Failed to get location.", statusPermissionDenied:"Location permission denied. Allow it and try again.", statusPositionUnavailable:"Position unavailable. Try enabling GPS or moving outdoors.", statusTimeout:"Location request timed out. Try again.", noContacts:"No contacts saved yet.", sendLocationBtn:"Send Location", deleteBtn:"Delete" },
+      kn:{ title:"Whatsapp ನಲ್ಲಿ ನನ್ನ ಲೈವ್ ಲೊಕೆಶನ್ ಕಳುಹಿಸಿ", description:"ವಿವರಗಳನ್ನು ನಮೂದಿಸಿ ಮತ್ತು ಲೈವ್ ಲೊಕೆಶನ್ ತಕ್ಷಣ ಹಂಚಿಕೊಳ್ಳಿ.", namePlaceholder:"ಹೆಸರು ನಮೂದಿಸಿ (ಐಚ್ಛಿಕ)", phonePlaceholder:"10 ಅಂಕೆಗಳ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ", btnSave:"ಸಂಪರ್ಕವನ್ನು ಉಳಿಸಿ", btnCheck:"ಉಳಿಸಿದ ಸಂಪರ್ಕಗಳನ್ನು ನೋಡಿ", shareBtn:"ಲೊಕೆಶನ್ ಹಂಚಿಕೊಳ್ಳಿ", note:"ಸ್ಥಳಾಂತರ ಅನುಮತಿ ಅಗತ್ಯವಿದೆ.", translateBtn:"ਪੰਜਾਬੀ", emergencyBtn:"ಅಪಘಾತ", editBtn:"ಉಳಿಸಿ", callRecentBtn:"ಇತ್ತೀಚೆಗೆ ಉಳಿಸಿದ ಸಂಪರ್ಕಕ್ಕೆ ಕರೆಮಾಡಿ", papaPlaceholder:"ಅಪಘಾತ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ", statusSaved:name=>`ಉಳಿಸಲಾಗಿದೆ: ${name}`, statusEnterValid:"ದಯವಿಟ್ಟು 10 ಅಂಕೆಗಳ ಸರಿಯಾದ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ.", statusInvalidPhone:"ದಯವಿಟ್ಟು 10 ಅಂಕೆಗಳ ಸರಿಯಾದ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ.", statusGeoUnsupported:"ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ ಜಿಯೊಲೊಕೆಶನ್ ಬೆಂಬಲಿತವಲ್ಲ.", statusGettingLocation:"ಸ್ಥಳಾಂತರ ಪಡೆಯಲಾಗುತ್ತಿದೆ… ದಯವಿಟ್ಟು ಅನುಮತಿಸು.", statusOpeningWhatsApp:"Whatsapp ತೆರೆಯಲಾಗುತ್ತಿದೆ…", statusGeoFail:"ಸ್ಥಳಾಂತರ ಪಡೆಯಲು ವಿಫಲವಾಗಿದೆ.", statusPermissionDenied:"ಸ್ಥಳಾಂತರ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. ಅನುಮತಿಸಿ ಮತ್ತು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", statusPositionUnavailable:"ಸ್ಥಿತಿ ಲಭ್ಯವಿಲ್ಲ. GPS ಸಕ್ರಿಯಗೊಳಿಸಿ ಅಥವಾ ಹೊರಗೆ ಹೋಗಿ.", statusTimeout:"ಸ್ಥಳಾಂತರ ವಿನಂತಿ ಸಮಯಾವಧಿ ಮುಗಿದಿದೆ. ಪುನಃ ಪ್ರಯತ್ನಿಸಿ.", noContacts:"ಇಲ್ಲಾ ಸಂಪರ್ಕಗಳು ಉಳಿಸಲಾಗಿದೆ.", sendLocationBtn:"ಲೊಕೆಶನ್ ಕಳುಹಿಸಿ", deleteBtn:"ಅಳಿಸಿ" },
+      pa:{ title:"ਵਟਸਐਪ 'ਤੇ ਮੇਰੀ ਲਾਈਵ ਲੋਕੇਸ਼ਨ ਭੇਜੋ", description:"ਵੇਰਵਾ ਦਰਜ ਕਰੋ ਅਤੇ ਤੁਰੰਤ ਲਾਈਵ ਲੋਕੇਸ਼ਨ ਸਾਂਝੀ ਕਰੋ।", namePlaceholder:"ਨਾਂ ਦਰਜ ਕਰੋ (ਵਿਕਲਪਿਕ)", phonePlaceholder:"10 ਅੰਕਾਂ ਵਾਲਾ ਮੋਬਾਈਲ ਨੰਬਰ", btnSave:"ਸੰਪਰਕ ਸੇਵ ਕਰੋ", btnCheck:"ਸੰਭਾਲੇ ਸੰਪਰਕ ਵੇਖੋ", shareBtn:"ਲੋਕੇਸ਼ਨ ਸਾਂਝੀ ਕਰੋ", note:"ਲੋਕੇਸ਼ਨ ਅਨੁਮਤੀ ਲੋੜੀਂਦੀ ਹੈ।", translateBtn:"हिंदी", emergencyBtn:"ਐਮਰਜੈਂਸੀ", editBtn:"ਸੰਭਾਲੋ", callRecentBtn:"ਹਾਲ ਹੀ ਵਿੱਚ ਸੇਵ ਕੀਤੇ ਸੰਪਰਕ ਨੂੰ ਕਾਲ ਕਰੋ", papaPlaceholder:"ਐਮਰਜੈਂਸੀ ਨੰਬਰ ਦਰਜ ਕਰੋ", statusSaved:name=>`ਸੰਭਾਲਿਆ ਗਿਆ: ${name}`, statusEnterValid:"ਕਿਰਪਾ ਕਰਕੇ 10 ਅੰਕਾਂ ਵਾਲਾ ਸਹੀ ਨੰਬਰ ਦਰਜ ਕਰੋ।", statusInvalidPhone:"ਕਿਰਪਾ ਕਰਕੇ 10 ਅੰਕਾਂ ਵਾਲਾ ਸਹੀ ਮੋਬਾਈਲ ਨੰਬਰ ਦਰਜ ਕਰੋ।", statusGeoUnsupported:"ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵੱਲੋਂ ਜਿਓਲੋਕੇਸ਼ਨ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ।", statusGettingLocation:"ਲੋਕੇਸ਼ਨ ਪ੍ਰਾਪਤ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ… ਕਿਰਪਾ ਕਰਕੇ ਅਨੁਮਤੀ ਦਿਓ।", statusOpeningWhatsApp:"Whatsapp ਖੋਲ੍ਹਿਆ ਜਾ ਰਿਹਾ ਹੈ…", statusGeoFail:"ਲੋਕੇਸ਼ਨ ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ।", statusPermissionDenied:"ਲੋਕੇਸ਼ਨ ਅਨੁਮਤੀ ਰੱਦ। ਕਿਰਪਾ ਕਰਕੇ ਅਨੁਮਤੀ ਦਿਓ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।", statusPositionUnavailable:"ਸਥਿਤੀ ਉਪਲਬਧ ਨਹੀਂ। GPS ਚਾਲੂ ਕਰੋ ਜਾਂ ਬਾਹਰ ਜਾਓ।", statusTimeout:"ਲੋਕੇਸ਼ਨ ਅਨੁਰੋਧ ਸਮਾਪਤ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।", noContacts:"ਕੋਈ ਸੰਪਰਕ ਸੇਵ ਨਹੀਂ ਕੀਤਾ ਗਿਆ।", sendLocationBtn:"ਲੋਕੇਸ਼ਨ ਭੇਜੋ", deleteBtn:"ਹਟਾਓ" },
+      hi:{ title:"व्हाट्सएप पर मेरी लाइव लोकेशन भेजें", description:"विवरण दर्ज करें और तुरंत लाइव लोकेशन साझा करें।", namePlaceholder:"नाम दर्ज करें (वैकल्पिक)", phonePlaceholder:"10-अंकों का मोबाइल नंबर", btnSave:"संपर्क सहेजें", btnCheck:"सहेजे गए संपर्क देखें", shareBtn:"लोकेशन साझा करें", note:"लोकेशन अनुमति आवश्यक है।", translateBtn:"English", emergencyBtn:"आपातकालीन", editBtn:"सहेजें", callRecentBtn:"हाल ही में सहेजे गए संपर्क को कॉल करें", papaPlaceholder:"आपातकालीन नंबर दर्ज करें", statusSaved:name=>`सहेजा गया: ${name}`, statusEnterValid:"कृपया 10 अंकों का सही नंबर दर्ज करें।", statusInvalidPhone:"कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें।", statusGeoUnsupported:"इस ब्राउज़र में जियोलोकेशन समर्थित नहीं है।", statusGettingLocation:"लोकेशन प्राप्त की जा रही है… अनुमति दें।", statusOpeningWhatsApp:"WhatsApp खोला जा रहा है…", statusGeoFail:"लोकेशन प्राप्त करने में विफल।", statusPermissionDenied:"लोकेशन अनुमति अस्वीकृत। अनुमति दें और पुनः प्रयास करें।", statusPositionUnavailable:"स्थिति उपलब्ध नहीं। GPS सक्षम करें या बाहर जाएँ।", statusTimeout:"लोकेशन अनुरोध समय समाप्त। पुनः प्रयास करें।", noContacts:"अभी तक कोई संपर्क सहेजा नहीं गया।", sendLocationBtn:"लोकेशन भेजें", deleteBtn:"हटाएँ" }
     };
 
     function flashStatus(msg,isError=false,duration=3000){
@@ -156,7 +156,9 @@
     function updateContactButtonsText(){
       const lang = languages[langState];
       const buttons = contactListDiv.querySelectorAll('.btn-send');
-      buttons.forEach(btn=>{btn.innerText = btn.classList.contains('delete') ? text[lang].deleteBtn : text[lang].sendLocationBtn;});
+      buttons.forEach(btn=>{
+        btn.innerText = btn.classList.contains('delete') ? text[lang].deleteBtn : text[lang].sendLocationBtn;
+      });
     }
 
     async function shareLocation(phone){
@@ -169,57 +171,64 @@
         const lng=pos.coords.longitude.toFixed(6); 
         const mapsLink=`https://maps.google.com/?q=${lat},${lng}`; 
         const msg=(lang==='hi')?`मेरी वर्तमान लोकेशन है: ${mapsLink}`:(lang==='kn')?`ನನ್ನ ಪ್ರಸ್ತುತ ಸ್ಥಳ ಇಲ್ಲಿದೆ: ${mapsLink}`:(lang==='pa')?`ਮੇਰੀ ਮੌਜੂਦਾ ਲੋਕੇਸ਼ਨ ਹੈ: ${mapsLink}`:`My current location is: ${mapsLink}`;
-        const waUrl=`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`; 
-        window.open(waUrl,'_blank'); 
-        flashStatus(text[lang].statusOpeningWhatsApp);
+        const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+        flashStatus(text[lang].statusOpeningWhatsApp); 
+        window.open(url,'_blank');
       },err=>{
-        let msg=text[lang].statusGeoFail;
-        if(err.code===1) msg=text[lang].statusPermissionDenied;
-        if(err.code===2) msg=text[lang].statusPositionUnavailable;
-        if(err.code===3) msg=text[lang].statusTimeout;
-        flashStatus(msg,true);
-      },{timeout:15000,enableHighAccuracy:true});
+        if(err.code===1) flashStatus(text[lang].statusPermissionDenied,true);
+        else if(err.code===2) flashStatus(text[lang].statusPositionUnavailable,true);
+        else if(err.code===3) flashStatus(text[lang].statusTimeout,true);
+        else flashStatus(text[lang].statusGeoFail,true);
+      },{timeout:10000});
     }
 
     function fillAndSend(index){
-      let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
-      shareLocation(contacts[index].phone);
+      let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]');
+      const contact=contacts[index];
+      shareLocation(contact.phone);
     }
 
     function deleteContact(index){
-      let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
-      contacts.splice(index,1); 
-      localStorage.setItem('wa_contacts',JSON.stringify(contacts)); 
+      let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]');
+      contacts.splice(index,1);
+      localStorage.setItem('wa_contacts',JSON.stringify(contacts));
       showContacts();
     }
 
     function toggleLanguage(){
-      langState=(langState+1)%languages.length;
+      langState=(langState+1)%languages.length; 
       const lang=languages[langState];
-      document.getElementById('title').textContent=text[lang].title;
-      document.getElementById('description').textContent=text[lang].description;
-      document.getElementById('note').textContent=text[lang].note;
-      document.getElementById('name').placeholder=text[lang].namePlaceholder;
-      document.getElementById('phone').placeholder=text[lang].phonePlaceholder;
-      document.getElementById('btnSave').textContent=text[lang].btnSave;
-      document.getElementById('btnCheck').textContent=text[lang].btnCheck;
-      shareBtn.textContent=text[lang].shareBtn;
-      translateBtn.innerHTML=`<img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> ${text[lang].translateBtn}`;
-      papaBtn.textContent = "📞 "+text[lang].emergencyBtn;
-      papaEditBtn.textContent = text[lang].editBtn;
-      recentBtn.textContent = "📞 "+text[lang].callRecentBtn;
-      papaInput.placeholder = text[lang].papaPlaceholder;
+      const t=text[lang];
+      document.getElementById('title').innerText=t.title;
+      document.getElementById('description').innerText=t.description;
+      document.getElementById('note').innerText=t.note;
+      document.getElementById('btnSave').innerText=t.btnSave;
+      document.getElementById('btnCheck').innerText=t.btnCheck;
+      document.getElementById('shareBtn').innerText=t.shareBtn;
+      translateBtn.innerText=t.translateBtn;
+      papaBtn.innerText=t.emergencyBtn;
+      papaEditBtn.innerText=t.editBtn;
+      recentBtn.innerText=t.callRecentBtn;
+      papaInput.placeholder = t.papaPlaceholder;
+      validateInput();
       updateContactButtonsText();
     }
 
-    shareBtn.addEventListener('click',()=>{shareLocation(phoneInput.value.trim());});
+    function togglePapaEdit(){
+      papaInput.disabled=!papaInput.disabled;
+      papaInput.focus();
+    }
 
-    // Emergency Call Button
-    function togglePapaEdit(){papaInput.disabled=!papaInput.disabled; if(!papaInput.disabled) papaInput.focus();}
-    function callPapa(){const n=papaInput.value.trim(); if(validatePhone(n)) window.open(`tel:${n}`); else flashStatus("Enter valid emergency number",true);}
-    
-    // Recent Call
-    function callRecent(){let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); if(contacts.length>0){const recent=contacts[contacts.length-1]; window.open(`tel:${recent.phone}`);}else{flashStatus("No contact saved",true);}}
+    function callPapa(){
+      const phone = papaInput.value.trim();
+      shareLocation(phone);
+    }
+
+    function callRecent(){
+      let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]');
+      if(contacts.length===0) flashStatus(text[languages[langState]].noContacts,true);
+      else shareLocation(contacts[contacts.length-1].phone);
+    }
   </script>
 </body>
 </html>
