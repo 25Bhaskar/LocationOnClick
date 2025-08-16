@@ -25,7 +25,7 @@
     .tooltip .tooltiptext {
       visibility: hidden;
       width: auto;
-      max-width: 90vw; /* responsive width */
+      max-width: 90vw;
       background-color: #333; 
       color: #fff;
       text-align: center; 
@@ -51,6 +51,9 @@
     #translateBtn { position: absolute; top: 12px; right: 12px; background: #ff9800; color: #fff; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; }
     #translateBtn img { width: 18px; height: 18px; }
 
+    /* Panic Button Style */
+    #panicBtn { position: absolute; top: 12px; left: 12px; background:#d32f2f; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; cursor:pointer; }
+
     /* Responsive for small screens */
     @media (max-width: 480px) {
       #translateBtn {
@@ -61,15 +64,23 @@
         width: 100%;
         justify-content: center;
       }
-
-      .card {
-        padding-top: 12px; /* space for button */
+      #panicBtn {
+        position: relative;
+        top: 0;
+        left: 0;
+        margin-bottom: 12px;
+        width: 100%;
+        justify-content: center;
       }
+      .card { padding-top: 12px; }
     }
   </style>
 </head>
 <body>
   <div class="card">
+    <!-- Panic Button -->
+    <button id="panicBtn" onclick="triggerPanic()" title="Emergency! Call saved contact immediately">🚨 Panic</button>
+
     <!-- Translate Button -->
     <button id="translateBtn" onclick="toggleLanguage()">
       <img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> हिंदी
@@ -86,17 +97,18 @@
       <input id="phone" type="tel" maxlength="10" placeholder="10-digit mobile number" inputmode="numeric" />
     </div>
 
+    <!-- Panic Contact Input -->
+    <div class="row">
+      <input id="panicContact" type="tel" maxlength="10" placeholder="Save Panic Contact Number" inputmode="numeric" />
+    </div>
+
     <div class="row">
       <button class="btn btn-save" onclick="saveContact()" id="btnSave">Save Contact</button>
       <button class="btn btn-check" onclick="showContacts()" id="btnCheck">Check Saved Contacts</button>
     </div>
 
     <button id="shareBtn" class="btn btn-share">Share Location</button>
-<!-- <div class="tooltip">
-      ℹ️
-      <span class="tooltiptext" id="tooltip">Enter exactly 10 digits (e.g., 9876543210). Name is optional but can be saved with the number.</span>
-    </div>
- -->
+
     <p class="note" id="note">Requires location permission.</p>
     <div id="status" class="status"></div>
     <div id="contactList"></div>
@@ -108,6 +120,8 @@
     const shareBtn = document.getElementById('shareBtn');
     const contactListDiv = document.getElementById('contactList');
     const translateBtn = document.getElementById('translateBtn');
+    const panicInput = document.getElementById('panicContact');
+    const panicBtn = document.getElementById('panicBtn');
 
     let isHindi = false;
 
@@ -252,11 +266,31 @@
       document.getElementById('btnSave').innerText = text[lang].btnSave;
       document.getElementById('btnCheck').innerText = text[lang].btnCheck;
       shareBtn.innerText = text[lang].shareBtn;
-      document.getElementById('tooltip').innerText = text[lang].tooltip;
       document.getElementById('note').innerText = text[lang].note;
       translateBtn.innerHTML = `<img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> ${text[lang].translateBtn}`;
       updateContactButtonsText();
     }
+
+    // Panic Contact Functionality
+    panicInput.addEventListener('blur', () => {
+      const num = panicInput.value.trim();
+      if(/^[0-9]{10}$/.test(num)) {
+        localStorage.setItem('panic_contact', num);
+        setStatus('Panic contact saved.');
+      } else if(num !== '') {
+        setStatus('Enter valid 10-digit number for panic contact.', true);
+      }
+    });
+
+    function triggerPanic() {
+      const panicNumber = localStorage.getItem('panic_contact');
+      if(!panicNumber || !/^[0-9]{10}$/.test(panicNumber)) {
+        setStatus('No valid panic contact saved.', true);
+        return;
+      }
+      window.location.href = `tel:+91${panicNumber}`;
+    }
+
   </script>
 </body>
 </html>
