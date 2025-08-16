@@ -6,7 +6,7 @@
   <title>Share My Location</title>
   <style>
     body { font-family: system-ui, Arial, sans-serif; margin: 0; padding: 24px; display: grid; place-items: center; min-height: 100vh; background: #f7f7f7; }
-    .card { background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 540px; }
+    .card { background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 540px; position: relative; }
     h2 { margin: 0 0 12px; }
     p { margin: 0 0 16px; line-height: 1.5; color: #444; }
     input, button { font-size: 16px; }
@@ -34,12 +34,21 @@
     #contactList li { padding: 6px 0; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
     .btn-send { background: #25D366; color: #fff; border-radius: 8px; padding: 6px 12px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
     .btn-send:hover { opacity: 0.9; }
+
+    /* Translate Button Style */
+    #translateBtn { position: absolute; top: 12px; right: 12px; background: #ff9800; color: #fff; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; }
+    #translateBtn img { width: 18px; height: 18px; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>Send My Live Location on WhatsApp</h2>
-    <p>Enter details and share live location instantly.</p>
+    <!-- Translate Button -->
+    <button id="translateBtn" onclick="toggleLanguage()">
+      <img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> हिंदी
+    </button>
+
+    <h2 id="title">Send My Live Location on WhatsApp</h2>
+    <p id="description">Enter details and share live location instantly.</p>
 
     <div class="row">
       <input id="name" type="text" placeholder="Enter Name (optional)" />
@@ -50,18 +59,18 @@
     </div>
 
     <div class="row">
-      <button class="btn btn-save" onclick="saveContact()">Save Contact</button>
-      <button class="btn btn-check" onclick="showContacts()">Check Saved Contacts</button>
+      <button class="btn btn-save" onclick="saveContact()" id="btnSave">Save Contact</button>
+      <button class="btn btn-check" onclick="showContacts()" id="btnCheck">Check Saved Contacts</button>
     </div>
 
     <button id="shareBtn" class="btn btn-share">Share Location</button>
 
     <div class="tooltip">
       ℹ️
-      <span class="tooltiptext">Enter exactly 10 digits (e.g., 9876543210). Name is optional but can be saved with the number.</span>
+      <span class="tooltiptext" id="tooltip">Enter exactly 10 digits (e.g., 9876543210). Name is optional but can be saved with the number.</span>
     </div>
 
-    <p class="note">Requires location permission.</p>
+    <p class="note" id="note">Requires location permission.</p>
     <div id="status" class="status"></div>
     <div id="contactList"></div>
   </div>
@@ -71,6 +80,60 @@
     const nameInput = document.getElementById('name');
     const shareBtn = document.getElementById('shareBtn');
     const contactListDiv = document.getElementById('contactList');
+    const translateBtn = document.getElementById('translateBtn');
+
+    let isHindi = false;
+
+    const text = {
+      en: {
+        title: "Send My Live Location on WhatsApp",
+        description: "Enter details and share live location instantly.",
+        namePlaceholder: "Enter Name (optional)",
+        phonePlaceholder: "10-digit mobile number",
+        btnSave: "Save Contact",
+        btnCheck: "Check Saved Contacts",
+        shareBtn: "Share Location",
+        tooltip: "Enter exactly 10 digits (e.g., 9876543210). Name is optional but can be saved with the number.",
+        note: "Requires location permission.",
+        statusSaved: name => `Saved: ${name}`,
+        statusEnterValid: "Enter a valid 10-digit number before saving.",
+        statusInvalidPhone: "Enter a valid 10-digit mobile number.",
+        statusGeoUnsupported: "Geolocation not supported by this browser.",
+        statusGettingLocation: "Getting location… please allow permission.",
+        statusOpeningWhatsApp: "Opening WhatsApp…",
+        statusGeoFail: "Failed to get location.",
+        statusPermissionDenied: "Location permission denied. Allow it and try again.",
+        statusPositionUnavailable: "Position unavailable. Try enabling GPS or moving outdoors.",
+        statusTimeout: "Location request timed out. Try again.",
+        noContacts: "No contacts saved yet.",
+        sendLocationBtn: "Send Location",
+        translateBtn: "हिंदी",
+      },
+      hi: {
+        title: "व्हाट्सएप पर मेरी लाइव लोकेशन भेजें",
+        description: "विवरण दर्ज करें और तुरंत लाइव लोकेशन साझा करें।",
+        namePlaceholder: "नाम दर्ज करें (वैकल्पिक)",
+        phonePlaceholder: "10-अंकों का मोबाइल नंबर",
+        btnSave: "संपर्क सहेजें",
+        btnCheck: "सहेजे गए संपर्क देखें",
+        shareBtn: "लोकेशन साझा करें",
+        tooltip: "ठीक 10 अंक दर्ज करें (जैसे, 9876543210)। नाम वैकल्पिक है।",
+        note: "लोकेशन अनुमति आवश्यक है।",
+        statusSaved: name => `सहेजा गया: ${name}`,
+        statusEnterValid: "कृपया 10 अंकों का सही नंबर दर्ज करें।",
+        statusInvalidPhone: "कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें।",
+        statusGeoUnsupported: "इस ब्राउज़र में जियोलोकेशन समर्थित नहीं है।",
+        statusGettingLocation: "लोकेशन प्राप्त की जा रही है… अनुमति दें।",
+        statusOpeningWhatsApp: "WhatsApp खोला जा रहा है…",
+        statusGeoFail: "लोकेशन प्राप्त करने में विफल।",
+        statusPermissionDenied: "लोकेशन अनुमति अस्वीकृत। अनुमति दें और पुनः प्रयास करें।",
+        statusPositionUnavailable: "स्थिति उपलब्ध नहीं। GPS सक्षम करें या बाहर जाएँ।",
+        statusTimeout: "लोकेशन अनुरोध समय समाप्त। पुनः प्रयास करें।",
+        noContacts: "अभी तक कोई संपर्क सहेजा नहीं गया।",
+        sendLocationBtn: "लोकेशन भेजें",
+        translateBtn: "English",
+      }
+    };
 
     function setStatus(msg, isError = false) {
       const el = document.getElementById('status');
@@ -78,93 +141,67 @@
       el.className = 'status ' + (isError ? 'error' : 'ok');
     }
 
-    function validatePhone(p) {
-      return /^[0-9]{10}$/.test(p);
-    }
-
-    function validateInput() {
-      if (validatePhone(phoneInput.value.trim())) {
-        shareBtn.classList.add('active');
-      } else {
-        shareBtn.classList.remove('active');
-      }
-    }
-
+    function validatePhone(p) { return /^[0-9]{10}$/.test(p); }
+    function validateInput() { if (validatePhone(phoneInput.value.trim())) shareBtn.classList.add('active'); else shareBtn.classList.remove('active'); }
     phoneInput.addEventListener('input', validateInput);
 
     function saveContact() {
       const phone = phoneInput.value.trim();
-      const name = nameInput.value.trim();
-
-      if (!validatePhone(phone)) {
-        setStatus('Enter a valid 10-digit number before saving.', true);
-        return;
-      }
-
+      const name = nameInput.value.trim() || "Unnamed";
+      if (!validatePhone(phone)) { setStatus(text[isHindi ? 'hi':'en'].statusEnterValid, true); return; }
       let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
-      contacts.push({ name: name || 'Unnamed', phone });
+      contacts.push({ name, phone });
       localStorage.setItem('wa_contacts', JSON.stringify(contacts));
-
-      setStatus(`Saved: ${name || 'Unnamed'} (${phone})`);
-      phoneInput.value = '';
-      nameInput.value = '';
-      validateInput();
+      setStatus(text[isHindi ? 'hi':'en'].statusSaved(name));
+      phoneInput.value = ''; nameInput.value = ''; validateInput();
+      updateContactButtonsText(); // Update text if list is visible
     }
 
     function showContacts() {
       let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
       if (contacts.length === 0) {
         contactListDiv.style.display = 'block';
-        contactListDiv.innerHTML = '<p>No contacts saved yet.</p>';
+        contactListDiv.innerHTML = `<p>${text[isHindi ? 'hi':'en'].noContacts}</p>`;
         return;
       }
-
       let html = '<ul>';
       contacts.forEach((c, index) => {
         html += `<li>
           <span><strong>${c.name}</strong> — ${c.phone}</span>
-          <button class="btn-send" onclick="fillAndSend(${index})">Send Location</button>
+          <button class="btn-send" onclick="fillAndSend(${index})">${text[isHindi ? 'hi':'en'].sendLocationBtn}</button>
         </li>`;
       });
       html += '</ul>';
-
       contactListDiv.style.display = 'block';
       contactListDiv.innerHTML = html;
     }
 
+    function updateContactButtonsText() {
+      const buttons = contactListDiv.querySelectorAll('.btn-send');
+      buttons.forEach(btn => btn.innerText = text[isHindi ? 'hi':'en'].sendLocationBtn);
+    }
+
     async function shareLocation(phone) {
-      if (!validatePhone(phone)) {
-        setStatus('Enter a valid 10-digit mobile number.', true);
-        return;
-      }
-
-      if (!('geolocation' in navigator)) {
-        setStatus('Geolocation not supported by this browser.', true);
-        return;
-      }
-
-      setStatus('Getting location… please allow permission.');
-
+      const lang = isHindi ? 'hi':'en';
+      if (!validatePhone(phone)) { setStatus(text[lang].statusInvalidPhone, true); return; }
+      if (!('geolocation' in navigator)) { setStatus(text[lang].statusGeoUnsupported, true); return; }
+      setStatus(text[lang].statusGettingLocation);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = pos.coords.latitude.toFixed(6);
           const lng = pos.coords.longitude.toFixed(6);
           const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
-
-          const msg = `My current location is: ${mapsLink}`;
+          const msg = isHindi ? `मेरी वर्तमान लोकेशन है: ${mapsLink}` : `My current location is: ${mapsLink}`;
           const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`;
-
-          setStatus('Opening WhatsApp…');
+          setStatus(text[lang].statusOpeningWhatsApp);
           location.href = waUrl;
-
-          // Hide saved contacts list after sending
           contactListDiv.style.display = 'none';
         },
         (err) => {
-          let msg = 'Failed to get location.';
-          if (err.code === 1) msg = 'Location permission denied. Allow it and try again.';
-          if (err.code === 2) msg = 'Position unavailable. Try enabling GPS or moving outdoors.';
-          if (err.code === 3) msg = 'Location request timed out. Try again.';
+          let msg = text[lang].statusGeoFail;
+          if (err.code === 1) msg = text[lang].statusPermissionDenied;
+          if (err.code === 2) msg = text[lang].statusPositionUnavailable;
+          if (err.code === 3) msg = text[lang].statusTimeout;
           setStatus(msg, true);
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -173,16 +210,26 @@
 
     function fillAndSend(index) {
       const contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
-      if (contacts[index]) {
-        phoneInput.value = contacts[index].phone;
-        validateInput();
-        shareLocation(contacts[index].phone);
-      }
+      if (contacts[index]) { phoneInput.value = contacts[index].phone; validateInput(); shareLocation(contacts[index].phone); }
     }
 
-    shareBtn.addEventListener('click', () => {
-      shareLocation(phoneInput.value.trim());
-    });
+    shareBtn.addEventListener('click', () => { shareLocation(phoneInput.value.trim()); });
+
+    function toggleLanguage() {
+      isHindi = !isHindi;
+      const lang = isHindi ? 'hi':'en';
+      document.getElementById('title').innerText = text[lang].title;
+      document.getElementById('description').innerText = text[lang].description;
+      document.getElementById('name').placeholder = text[lang].namePlaceholder;
+      document.getElementById('phone').placeholder = text[lang].phonePlaceholder;
+      document.getElementById('btnSave').innerText = text[lang].btnSave;
+      document.getElementById('btnCheck').innerText = text[lang].btnCheck;
+      shareBtn.innerText = text[lang].shareBtn;
+      document.getElementById('tooltip').innerText = text[lang].tooltip;
+      document.getElementById('note').innerText = text[lang].note;
+      translateBtn.innerHTML = `<img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> ${text[lang].translateBtn}`;
+      updateContactButtonsText();
+    }
   </script>
 </body>
 </html>
