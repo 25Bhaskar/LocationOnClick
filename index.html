@@ -52,7 +52,7 @@
     #translateBtn img { width: 18px; height: 18px; }
 
     /* Panic Button Style */
-    #panicBtn { position: absolute; top: 12px; left: 12px; background:#d32f2f; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; cursor:pointer; }
+    #panicBtn { position: absolute; top: 12px; right: 12px; background:#d32f2f; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; cursor:pointer; flex; align-items: center; gap: 6px; }
 
     /* Responsive for small screens */
     @media (max-width: 480px) {
@@ -97,17 +97,17 @@
       <input id="phone" type="tel" maxlength="10" placeholder="10-digit mobile number" inputmode="numeric" />
     </div>
 
-    <!-- Panic Contact Input -->
-    <div class="row">
-      <input id="panicContact" type="tel" maxlength="10" placeholder="Save Panic Contact Number" inputmode="numeric" />
-    </div>
-
     <div class="row">
       <button class="btn btn-save" onclick="saveContact()" id="btnSave">Save Contact</button>
       <button class="btn btn-check" onclick="showContacts()" id="btnCheck">Check Saved Contacts</button>
     </div>
 
     <button id="shareBtn" class="btn btn-share">Share Location</button>
+
+        <!-- Panic Contact Input -->
+    <div class="row">
+      <input id="panicContact" type="tel" maxlength="10" placeholder="Save Panic Contact Number" inputmode="numeric" />
+    </div>
 
     <p class="note" id="note">Requires location permission.</p>
     <div id="status" class="status"></div>
