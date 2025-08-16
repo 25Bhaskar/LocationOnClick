@@ -51,17 +51,24 @@
     #translateBtn { position: absolute; top: 12px; right: 12px; background: #ff9800; color: #fff; padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; }
     #translateBtn img { width: 18px; height: 18px; }
 
-    /* Panic Button Style - WEB optimized */
-    #panicBtn { background:#d32f2f; color:#fff; padding:12px 16px; border-radius:8px; border:none; font-weight:600; cursor:pointer; width: 100%; margin-top: 12px; font-size: 16px; }
-
-    /* Panic Contact Row below Share */
-    #panicRow { display: flex; gap: 8px; margin-top: 12px; }
-    #panicRow input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd; }
-    #panicRow button { padding: 12px 16px; border-radius: 8px; border: none; background: #d32f2f; color: #fff; font-weight:600; cursor:pointer; }
+    /* Panic Button Style */
+    #panicBtn { position: absolute; top: 12px; left: 12px; background:#d32f2f; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; cursor:pointer; }
 
     /* Responsive for small screens */
     @media (max-width: 480px) {
-      #translateBtn, #panicBtn, #panicRow button {
+      #translateBtn {
+        position: relative;
+        top: 0;
+        right: 0;
+        margin-bottom: 12px;
+        width: 100%;
+        justify-content: center;
+      }
+      #panicBtn {
+        position: relative;
+        top: 0;
+        left: 0;
+        margin-bottom: 12px;
         width: 100%;
         justify-content: center;
       }
@@ -71,6 +78,9 @@
 </head>
 <body>
   <div class="card">
+    <!-- Panic Button -->
+    <button id="panicBtn" onclick="triggerPanic()" title="Emergency! Call saved contact immediately">🚨 Panic</button>
+
     <!-- Translate Button -->
     <button id="translateBtn" onclick="toggleLanguage()">
       <img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> हिंदी
@@ -87,20 +97,17 @@
       <input id="phone" type="tel" maxlength="10" placeholder="10-digit mobile number" inputmode="numeric" />
     </div>
 
+    <!-- Panic Contact Input -->
+    <div class="row">
+      <input id="panicContact" type="tel" maxlength="10" placeholder="Save Panic Contact Number" inputmode="numeric" />
+    </div>
+
     <div class="row">
       <button class="btn btn-save" onclick="saveContact()" id="btnSave">Save Contact</button>
       <button class="btn btn-check" onclick="showContacts()" id="btnCheck">Check Saved Contacts</button>
     </div>
 
     <button id="shareBtn" class="btn btn-share">Share Location</button>
-
-    <!-- Panic Contact Save/Edit Below -->
-    <div id="panicRow">
-      <input id="panicContact" type="tel" maxlength="10" placeholder="Save/Edit Panic Contact Number" inputmode="numeric" />
-      <button onclick="savePanicContact()">Save</button>
-    </div>
-
-    <button id="panicBtn" onclick="triggerPanic()" title="Emergency! Call saved contact immediately">🚨 Panic</button>
 
     <p class="note" id="note">Requires location permission.</p>
     <div id="status" class="status"></div>
@@ -119,4 +126,171 @@
     let isHindi = false;
 
     const text = {
-      en: { title:"Send My Live Location on WhatsApp", description:"Enter details and share live location instantly.", namePlaceholder:"Enter Name (optional)", phonePlaceholder:"10-digit mobile number", btnSave:"Save Contact", btnCheck:"Check Saved Contacts", shareBtn:"Share Location", tooltip:"Enter exactly 10 digits (e.g., 9876543210). Name is optional but can be saved with the number.", note:"Requires location permission.", statusSaved:name=>`Saved: ${name}`
+      en: {
+        title: "Send My Live Location on WhatsApp",
+        description: "Enter details and share live location instantly.",
+        namePlaceholder: "Enter Name (optional)",
+        phonePlaceholder: "10-digit mobile number",
+        btnSave: "Save Contact",
+        btnCheck: "Check Saved Contacts",
+        shareBtn: "Share Location",
+        tooltip: "Enter exactly 10 digits (e.g., 9876543210). Name is optional but can be saved with the number.",
+        note: "Requires location permission.",
+        statusSaved: name => `Saved: ${name}`,
+        statusEnterValid: "Enter a valid 10-digit number before saving.",
+        statusInvalidPhone: "Enter a valid 10-digit mobile number.",
+        statusGeoUnsupported: "Geolocation not supported by this browser.",
+        statusGettingLocation: "Getting location… please allow permission.",
+        statusOpeningWhatsApp: "Opening WhatsApp…",
+        statusGeoFail: "Failed to get location.",
+        statusPermissionDenied: "Location permission denied. Allow it and try again.",
+        statusPositionUnavailable: "Position unavailable. Try enabling GPS or moving outdoors.",
+        statusTimeout: "Location request timed out. Try again.",
+        noContacts: "No contacts saved yet.",
+        sendLocationBtn: "Send Location",
+        translateBtn: "हिंदी",
+      },
+      hi: {
+        title: "व्हाट्सएप पर मेरी लाइव लोकेशन भेजें",
+        description: "विवरण दर्ज करें और तुरंत लाइव लोकेशन साझा करें।",
+        namePlaceholder: "नाम दर्ज करें (वैकल्पिक)",
+        phonePlaceholder: "10-अंकों का मोबाइल नंबर",
+        btnSave: "संपर्क सहेजें",
+        btnCheck: "सहेजे गए संपर्क देखें",
+        shareBtn: "लोकेशन साझा करें",
+        tooltip: "ठीक 10 अंक दर्ज करें (जैसे, 9876543210)। नाम वैकल्पिक है।",
+        note: "लोकेशन अनुमति आवश्यक है।",
+        statusSaved: name => `सहेजा गया: ${name}`,
+        statusEnterValid: "कृपया 10 अंकों का सही नंबर दर्ज करें।",
+        statusInvalidPhone: "कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें।",
+        statusGeoUnsupported: "इस ब्राउज़र में जियोलोकेशन समर्थित नहीं है।",
+        statusGettingLocation: "लोकेशन प्राप्त की जा रही है… अनुमति दें।",
+        statusOpeningWhatsApp: "WhatsApp खोला जा रहा है…",
+        statusGeoFail: "लोकेशन प्राप्त करने में विफल।",
+        statusPermissionDenied: "लोकेशन अनुमति अस्वीकृत। अनुमति दें और पुनः प्रयास करें।",
+        statusPositionUnavailable: "स्थिति उपलब्ध नहीं। GPS सक्षम करें या बाहर जाएँ।",
+        statusTimeout: "लोकेशन अनुरोध समय समाप्त। पुनः प्रयास करें।",
+        noContacts: "अभी तक कोई संपर्क सहेजा नहीं गया।",
+        sendLocationBtn: "लोकेशन भेजें",
+        translateBtn: "English",
+      }
+    };
+
+    function setStatus(msg, isError = false) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status ' + (isError ? 'error' : 'ok');
+    }
+
+    function validatePhone(p) { return /^[0-9]{10}$/.test(p); }
+    function validateInput() { if (validatePhone(phoneInput.value.trim())) shareBtn.classList.add('active'); else shareBtn.classList.remove('active'); }
+    phoneInput.addEventListener('input', validateInput);
+
+    function saveContact() {
+      const phone = phoneInput.value.trim();
+      const name = nameInput.value.trim() || "Unnamed";
+      if (!validatePhone(phone)) { setStatus(text[isHindi ? 'hi':'en'].statusEnterValid, true); return; }
+      let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
+      contacts.push({ name, phone });
+      localStorage.setItem('wa_contacts', JSON.stringify(contacts));
+      setStatus(text[isHindi ? 'hi':'en'].statusSaved(name));
+      phoneInput.value = ''; nameInput.value = ''; validateInput();
+      updateContactButtonsText();
+    }
+
+    function showContacts() {
+      let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
+      if (contacts.length === 0) {
+        contactListDiv.style.display = 'block';
+        contactListDiv.innerHTML = `<p>${text[isHindi ? 'hi':'en'].noContacts}</p>`;
+        return;
+      }
+      let html = '<ul>';
+      contacts.forEach((c, index) => {
+        html += `<li>
+          <span><strong>${c.name}</strong> — ${c.phone}</span>
+          <button class="btn-send" onclick="fillAndSend(${index})">${text[isHindi ? 'hi':'en'].sendLocationBtn}</button>
+        </li>`;
+      });
+      html += '</ul>';
+      contactListDiv.style.display = 'block';
+      contactListDiv.innerHTML = html;
+    }
+
+    function updateContactButtonsText() {
+      const buttons = contactListDiv.querySelectorAll('.btn-send');
+      buttons.forEach(btn => btn.innerText = text[isHindi ? 'hi':'en'].sendLocationBtn);
+    }
+
+    async function shareLocation(phone) {
+      const lang = isHindi ? 'hi':'en';
+      if (!validatePhone(phone)) { setStatus(text[lang].statusInvalidPhone, true); return; }
+      if (!('geolocation' in navigator)) { setStatus(text[lang].statusGeoUnsupported, true); return; }
+      setStatus(text[lang].statusGettingLocation);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude.toFixed(6);
+          const lng = pos.coords.longitude.toFixed(6);
+          const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
+          const msg = isHindi ? `मेरी वर्तमान लोकेशन है: ${mapsLink}` : `My current location is: ${mapsLink}`;
+          const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`;
+          setStatus(text[lang].statusOpeningWhatsApp);
+          location.href = waUrl;
+          contactListDiv.style.display = 'none';
+        },
+        (err) => {
+          let msg = text[lang].statusGeoFail;
+          if (err.code === 1) msg = text[lang].statusPermissionDenied;
+          if (err.code === 2) msg = text[lang].statusPositionUnavailable;
+          if (err.code === 3) msg = text[lang].statusTimeout;
+          setStatus(msg, true);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    }
+
+    function fillAndSend(index) {
+      const contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
+      if (contacts[index]) { phoneInput.value = contacts[index].phone; validateInput(); shareLocation(contacts[index].phone); }
+    }
+
+    shareBtn.addEventListener('click', () => { shareLocation(phoneInput.value.trim()); });
+
+    function toggleLanguage() {
+      isHindi = !isHindi;
+      const lang = isHindi ? 'hi':'en';
+      document.getElementById('title').innerText = text[lang].title;
+      document.getElementById('description').innerText = text[lang].description;
+      document.getElementById('name').placeholder = text[lang].namePlaceholder;
+      document.getElementById('phone').placeholder = text[lang].phonePlaceholder;
+      document.getElementById('btnSave').innerText = text[lang].btnSave;
+      document.getElementById('btnCheck').innerText = text[lang].btnCheck;
+      shareBtn.innerText = text[lang].shareBtn;
+      document.getElementById('note').innerText = text[lang].note;
+      translateBtn.innerHTML = `<img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> ${text[lang].translateBtn}`;
+      updateContactButtonsText();
+    }
+
+    // Panic Contact Functionality
+    panicInput.addEventListener('blur', () => {
+      const num = panicInput.value.trim();
+      if(/^[0-9]{10}$/.test(num)) {
+        localStorage.setItem('panic_contact', num);
+        setStatus('Panic contact saved.');
+      } else if(num !== '') {
+        setStatus('Enter valid 10-digit number for panic contact.', true);
+      }
+    });
+
+    function triggerPanic() {
+      const panicNumber = localStorage.getItem('panic_contact');
+      if(!panicNumber || !/^[0-9]{10}$/.test(panicNumber)) {
+        setStatus('No valid panic contact saved.', true);
+        return;
+      }
+      window.location.href = `tel:+91${panicNumber}`;
+    }
+
+  </script>
+</body>
+</html>
