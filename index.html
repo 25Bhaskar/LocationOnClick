@@ -88,9 +88,16 @@
       <h2 id="voiceTitle">Voice Message</h2>
       <p class="note" id="voiceNote">Send a voice message via WhatsApp</p>
 
-      <div class="row" style="align-items: center;">
+      <div class="row" style="align-items: center; gap:6px;">
         <input id="voiceNumber" type="tel" maxlength="10" placeholder="Enter Number" inputmode="numeric" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ddd;" />
-        <button id="voiceSendBtn" class="btn btn-send" style="margin-left:6px;">Send</button>
+        <button id="voiceSendBtn" class="btn btn-send">Send</button>
+      </div>
+
+      <!-- Voice Recording Controls -->
+      <div class="row" style="margin-top:12px; gap:6px; align-items:center;">
+        <button id="recordBtn" class="btn btn-save">🎤 Record</button>
+        <button id="stopBtn" class="btn btn-check" disabled>⏹ Stop</button>
+        <audio id="audioPlayback" controls style="flex:1;"></audio>
       </div>
 
       <div id="voiceStatus" class="status"></div>
@@ -178,7 +185,6 @@
       }
     };
 
-    // Helper Functions
     function flashStatus(msg,isError=false,duration=3000){
       const el=document.getElementById('status');
       el.textContent=msg;
@@ -188,7 +194,7 @@
     function flashVoiceStatus(msg,isError=false,duration=3000){
       voiceStatus.textContent=msg;
       voiceStatus.className='status '+(isError?'error':'ok');
-      setTimeout(()=>{ voiceStatus.textContent = ''; }, duration);
+      setTimeout(()=>{ voiceStatus.textContent=''; }, duration);
     }
 
     function validatePhone(p){return /^[0-9]{10}$/.test(p);}
@@ -307,71 +313,66 @@
       const lang=isHindi?'hi':'en'; 
       document.getElementById('title').innerText=text[lang].title; 
       document.getElementById('description').innerText=text[lang].description; 
-      document.getElementById('name').placeholder=text[lang].namePlaceholder; 
-      document.getElementById('phone').placeholder=text[lang].phonePlaceholder; 
+      document.getElementById('note').innerText=text[lang].note; 
+      phoneInput.placeholder=text[lang].phonePlaceholder; 
+      nameInput.placeholder=text[lang].namePlaceholder; 
       document.getElementById('btnSave').innerText=text[lang].btnSave; 
       document.getElementById('btnCheck').innerText=text[lang].btnCheck; 
       shareBtn.innerText=text[lang].shareBtn; 
-      document.getElementById('note').innerText=text[lang].note; 
-      translateBtn.innerHTML=`<img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> ${text[lang].translateBtn}`; 
-
-      // Update emergency, edit, recent
-      papaBtn.innerText = `📞 ${text[lang].emergencyBtn}`;
-      papaEditBtn.innerText = text[lang].editBtn;
-      recentBtn.innerText = `📞 ${text[lang].callRecentBtn}`;
-
+      translateBtn.innerText=text[lang].translateBtn; 
+      papaBtn.innerText=text[lang].emergencyBtn; 
+      papaEditBtn.innerText=text[lang].editBtn; 
+      recentBtn.innerText=text[lang].callRecentBtn; 
+      updateVoiceText(); 
       updateContactButtonsText();
-      updateVoiceText();
     }
 
-    const savedPapa=localStorage.getItem('papa_number'); 
-    if(savedPapa) papaInput.value=savedPapa;
+    // Panic Contact
+    function togglePapaEdit(){papaInput.disabled=!papaInput.disabled;}
+    function callPapa(){ const num=papaInput.value.trim(); if(validatePhone(num)){window.open(`tel:+91${num}`,'_self');} else flashStatus(isHindi?'कृपया आपातकालीन नंबर दर्ज करें।':'Enter emergency number.',true);}
+    function callRecent(){ let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); if(contacts.length>0){ let lastContact=contacts[contacts.length-1]; window.open(`tel:+91${lastContact.phone}`,'_self');} else flashStatus(text[isHindi?'hi':'en'].noContacts,true);}
+    function deleteContact(idx){ let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); contacts.splice(idx,1); localStorage.setItem('wa_contacts',JSON.stringify(contacts)); showContacts();}
 
-    function togglePapaEdit(){
-      if(papaInput.disabled){
-        papaInput.disabled=false; 
-        papaInput.focus(); 
-        papaEditBtn.innerText='Save';
-      } else {
-        const num=papaInput.value.trim(); 
-        if(/^[0-9]{1,10}$/.test(num)){
-          localStorage.setItem('papa_number',num); 
-          flashStatus('Emergency number saved.'); 
-          papaInput.disabled=true; 
-          papaEditBtn.innerText='Edit';
-        } else {
-          flashStatus('Enter a valid Emergency number.',true); 
-          papaInput.focus();
-        }
-      }
-    }
+    // Voice Recording
+    let mediaRecorder, audioChunks = [];
+    const recordBtn = document.getElementById('recordBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const audioPlayback = document.getElementById('audioPlayback');
 
-    function callPapa(){
-      const num=localStorage.getItem('papa_number'); 
-      if(!num||!/^[0-9]{1,10}$/.test(num)){
-        flashStatus('No valid Emergency number saved.',true); 
+    recordBtn.addEventListener('click', async () => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        flashVoiceStatus('Audio recording not supported in this browser.', true);
         return;
-      } 
-      window.location.href=`tel:+91${num}`;
-    }
-
-    function callRecent(){
-      const contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
-      if(contacts.length===0){flashStatus('No saved contacts to call.',true); return;} 
-      const recentNumber=contacts[contacts.length-1].phone; 
-      if(!/^[0-9]{10}$/.test(recentNumber)){flashStatus('Saved contact number is invalid.',true); return;} 
-      window.location.href=`tel:+91${recentNumber}`;
-    }
-
-    function deleteContact(index){
-      let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
-      if(contacts[index]){
-        const removed=contacts.splice(index,1); 
-        localStorage.setItem('wa_contacts',JSON.stringify(contacts)); 
-        flashStatus(`Deleted: ${removed[0].name}`); 
-        showContacts();
       }
-    }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const audioUrl = URL.createObjectURL(audioBlob);
+          audioPlayback.src = audioUrl;
+        };
+
+        mediaRecorder.start();
+        flashVoiceStatus(isHindi ? 'रिकॉर्डिंग…' : 'Recording...');
+        recordBtn.disabled = true;
+        stopBtn.disabled = false;
+      } catch (err) {
+        flashVoiceStatus('Could not start recording: ' + err.message, true);
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        flashVoiceStatus(isHindi ? 'रिकॉर्डिंग बंद हो गई।' : 'Recording stopped.');
+        recordBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+    });
   </script>
 </body>
 </html>
