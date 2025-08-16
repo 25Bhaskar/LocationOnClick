@@ -10,36 +10,63 @@
     h2 { margin: 0 0 12px; }
     p { margin: 0 0 16px; line-height: 1.5; color: #444; }
     input, button { font-size: 16px; }
-    .row { display: flex; gap: 8px; }
+    .row { display: flex; gap: 8px; margin-bottom: 12px; }
     .row input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd; }
-    .btn { padding: 14px 18px; border: 0; border-radius: 10px; cursor: pointer; }
-    .btn-primary { background: #25D366; color: #fff; font-weight: 600; width: 100%; }
-    .btn-save { background: #ccc; color: #fff; font-weight: 600; width: 100%; transition: background 0.3s; }
-    .btn-save.active { background: #007bff; }
+    .btn { padding: 14px 18px; border: 0; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: #25D366; color: #fff; font-weight: 600; width: 100%; opacity: 0.6; pointer-events: none; }
+    .btn-primary.active { opacity: 1; pointer-events: auto; }
     .note { font-size: 13px; color: #666; margin-top: 8px; }
     .status { margin-top: 12px; font-size: 14px; color: #111; }
     .error { color: #b00020; }
     .ok { color: #0a7a32; }
-    ul { margin: 10px 0; padding: 0; list-style: none; }
-    li { background: #f1f1f1; margin: 4px 0; padding: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-    li span { flex: 1; }
-    li button { background: #dc3545; color: #fff; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: help;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 220px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 6px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%; 
+      left: 50%;
+      margin-left: -110px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 13px;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <h2>Send My Live Location on WhatsApp</h2>
-    <p>Enter a 10-digit WhatsApp number (no spaces, no +). Example: <b>9876543210</b></p>
+    <p>Enter your details and share location instantly.</p>
 
     <div class="row">
-      <input id="phone" type="tel" maxlength="10" placeholder="e.g., 9876543210" inputmode="numeric" />
-      <button id="saveBtn" class="btn btn-save" onclick="saveContact()" disabled>Save</button>
+      <input id="name" type="text" placeholder="Enter Name (optional)" />
     </div>
 
-    <button class="btn btn-primary" onclick="shareLocation()">Share Location</button>
+    <div class="row">
+      <input id="phone" type="tel" maxlength="10" placeholder="10-digit mobile number" inputmode="numeric" />
+      <button class="btn" onclick="prefill()">Use Last</button>
+    </div>
 
-    <h3>Saved Numbers</h3>
-    <ul id="contactList"></ul>
+    <button id="saveBtn" class="btn btn-primary">Save & Share Location</button>
+
+    <div class="tooltip">
+      ℹ️
+      <span class="tooltiptext">Enter exactly 10 digits (e.g., 9876543210). Name is optional but can be saved with the number.</span>
+    </div>
 
     <p class="note">Requires location permission. Works best in Chrome/Safari over HTTPS.</p>
     <div id="status" class="status"></div>
@@ -47,139 +74,86 @@
 
   <script>
     const phoneInput = document.getElementById('phone');
+    const nameInput = document.getElementById('name');
     const saveBtn = document.getElementById('saveBtn');
-    const statusEl = document.getElementById('status');
-    const contactList = document.getElementById('contactList');
+
+    function prefill() {
+      const savedPhone = localStorage.getItem('wa_phone');
+      const savedName = localStorage.getItem('wa_name');
+      if (savedPhone) phoneInput.value = savedPhone;
+      if (savedName) nameInput.value = savedName;
+      setStatus(savedPhone ? 'Loaded saved details.' : 'No saved details yet.');
+      validateInput();
+    }
 
     function setStatus(msg, isError = false) {
-      statusEl.textContent = msg;
-      statusEl.className = 'status ' + (isError ? 'error' : 'ok');
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status ' + (isError ? 'error' : 'ok');
     }
 
     function validatePhone(p) {
-      return /^[0-9]{10}$/.test(p);
+      return /^[0-9]{10}$/.test(p); // exactly 10 digits
     }
 
-    phoneInput.addEventListener('input', () => {
-      if (validatePhone(phoneInput.value)) {
-        saveBtn.disabled = false;
+    function validateInput() {
+      if (validatePhone(phoneInput.value.trim())) {
         saveBtn.classList.add('active');
       } else {
-        saveBtn.disabled = true;
         saveBtn.classList.remove('active');
       }
-    });
-
-    function saveContact() {
-      const phone = phoneInput.value.trim();
-      if (!validatePhone(phone)) {
-        setStatus('❌ Please enter exactly 10 digits before saving.', true);
-        return;
-      }
-
-      let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
-      if (!contacts.includes(phone)) {
-        contacts.push(phone);
-        localStorage.setItem('wa_contacts', JSON.stringify(contacts));
-        renderContacts();
-        setStatus('✅ Number saved successfully.');
-      } else {
-        setStatus('⚠️ Number already saved.');
-      }
-      phoneInput.value = '';
-      saveBtn.disabled = true;
-      saveBtn.classList.remove('active');
     }
 
-    function renderContacts() {
-      contactList.innerHTML = '';
-      let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
-      contacts = contacts.filter(c => validatePhone(c));
-      localStorage.setItem('wa_contacts', JSON.stringify(contacts));
-
-      contacts.forEach(num => {
-        const li = document.createElement('li');
-
-        const span = document.createElement('span');
-        span.textContent = num;
-
-        // ✅ Single click fills input
-        span.onclick = () => selectContact(num);
-
-        // ✅ Double click directly shares location
-        span.ondblclick = () => directShare(num);
-
-        const delBtn = document.createElement('button');
-        delBtn.textContent = 'Delete';
-        delBtn.onclick = (e) => {
-          e.stopPropagation();
-          deleteContact(num);
-        };
-
-        li.appendChild(span);
-        li.appendChild(delBtn);
-        contactList.appendChild(li);
-      });
-    }
-
-    function selectContact(num) {
-      phoneInput.value = num;
-      if (validatePhone(num)) {
-        saveBtn.disabled = false;
-        saveBtn.classList.add('active');
-      }
-      setStatus('📲 Number selected: ' + num);
-    }
-
-    function deleteContact(num) {
-      let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
-      contacts = contacts.filter(c => c !== num);
-      localStorage.setItem('wa_contacts', JSON.stringify(contacts));
-      renderContacts();
-      setStatus('🗑️ Number deleted.');
-    }
+    phoneInput.addEventListener('input', validateInput);
 
     async function shareLocation() {
       const phone = phoneInput.value.trim();
+      const name = nameInput.value.trim();
+
       if (!validatePhone(phone)) {
-        setStatus('❌ Please enter exactly 10 digits before sharing.', true);
+        setStatus('Enter a valid 10-digit mobile number.', true);
         return;
       }
-      sendLocation(phone);
-    }
 
-    function directShare(num) {
-      setStatus('🚀 Direct sharing with ' + num);
-      sendLocation(num);
-    }
+      localStorage.setItem('wa_phone', phone);
+      if (name) localStorage.setItem('wa_name', name);
 
-    function sendLocation(phone) {
       if (!('geolocation' in navigator)) {
         setStatus('Geolocation not supported by this browser.', true);
         return;
       }
+
       setStatus('Getting location… please allow permission.');
+
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = pos.coords.latitude.toFixed(6);
           const lng = pos.coords.longitude.toFixed(6);
           const mapsLink = `https://maps.google.com/?q=${lat},${lng}`;
-          const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent('My Live Location: ' + mapsLink)}`;
+
+          let msg = `My Live Location: ${mapsLink}`;
+          if (name) msg = `${name}'s Live Location: ${mapsLink}`;
+
+          const waUrl = `https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`;
+
           setStatus('Opening WhatsApp…');
           location.href = waUrl;
         },
         (err) => {
           let msg = 'Failed to get location.';
-          if (err.code === 1) msg = 'Location permission was denied.';
-          if (err.code === 2) msg = 'Position unavailable.';
-          if (err.code === 3) msg = 'Location request timed out.';
+          if (err.code === 1) msg = 'Location permission denied. Allow it and try again.';
+          if (err.code === 2) msg = 'Position unavailable. Try moving to open sky or enabling GPS.';
+          if (err.code === 3) msg = 'Location request timed out. Try again.';
           setStatus(msg, true);
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     }
 
-    renderContacts();
+    saveBtn.addEventListener('click', shareLocation);
+
+    // Prefill if data exists
+    (function init() { prefill(); })();
   </script>
 </body>
 </html>
