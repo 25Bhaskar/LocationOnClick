@@ -6,45 +6,32 @@
   <title>Share My Location</title>
   <style>
     body { font-family: system-ui, Arial, sans-serif; margin: 0; padding: 24px; display: grid; place-items: center; min-height: 100vh; background: #f7f7f7; }
-    .card { background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 520px; }
+    .card { background: #fff; padding: 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); width: 100%; max-width: 540px; }
     h2 { margin: 0 0 12px; }
     p { margin: 0 0 16px; line-height: 1.5; color: #444; }
     input, button { font-size: 16px; }
     .row { display: flex; gap: 8px; margin-bottom: 12px; }
     .row input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd; }
-    .btn { padding: 14px 18px; border: 0; border-radius: 10px; cursor: pointer; transition: 0.2s; }
-    .btn-primary { background: #25D366; color: #fff; font-weight: 600; width: 100%; opacity: 0.6; pointer-events: none; }
-    .btn-primary.active { opacity: 1; pointer-events: auto; }
+    .btn { padding: 12px 16px; border: 0; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+    .btn-save { background: #1976d2; color: #fff; }
+    .btn-check { background: #6c757d; color: #fff; }
+    .btn-share { background: #25D366; color: #fff; width: 100%; opacity: 0.6; pointer-events: none; }
+    .btn-share.active { opacity: 1; pointer-events: auto; }
     .note { font-size: 13px; color: #666; margin-top: 8px; }
     .status { margin-top: 12px; font-size: 14px; color: #111; }
     .error { color: #b00020; }
     .ok { color: #0a7a32; }
-    .tooltip {
-      position: relative;
-      display: inline-block;
-      cursor: help;
-    }
+    .tooltip { position: relative; display: inline-block; cursor: help; }
     .tooltip .tooltiptext {
-      visibility: hidden;
-      width: 220px;
-      background-color: #333;
-      color: #fff;
-      text-align: center;
-      border-radius: 6px;
-      padding: 6px;
-      position: absolute;
-      z-index: 1;
-      bottom: 125%; 
-      left: 50%;
-      margin-left: -110px;
-      opacity: 0;
-      transition: opacity 0.3s;
-      font-size: 13px;
+      visibility: hidden; width: 220px; background-color: #333; color: #fff;
+      text-align: center; border-radius: 6px; padding: 6px;
+      position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px;
+      opacity: 0; transition: opacity 0.3s; font-size: 13px;
     }
-    .tooltip:hover .tooltiptext {
-      visibility: visible;
-      opacity: 1;
-    }
+    .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+    #contactList { margin-top: 16px; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 8px; display: none; }
+    #contactList ul { padding: 0; margin: 0; list-style: none; }
+    #contactList li { padding: 6px 0; border-bottom: 1px solid #ddd; }
   </style>
 </head>
 <body>
@@ -58,10 +45,14 @@
 
     <div class="row">
       <input id="phone" type="tel" maxlength="10" placeholder="10-digit mobile number" inputmode="numeric" />
-      <button class="btn" onclick="prefill()">Use Last</button>
     </div>
 
-    <button id="saveBtn" class="btn btn-primary">Save & Share Location</button>
+    <div class="row">
+      <button class="btn btn-save" onclick="saveContact()">Save Contact</button>
+      <button class="btn btn-check" onclick="showContacts()">Check Saved Contacts</button>
+    </div>
+
+    <button id="shareBtn" class="btn btn-share">Share Location</button>
 
     <div class="tooltip">
       ℹ️
@@ -70,21 +61,14 @@
 
     <p class="note">Requires location permission. Works best in Chrome/Safari over HTTPS.</p>
     <div id="status" class="status"></div>
+    <div id="contactList"></div>
   </div>
 
   <script>
     const phoneInput = document.getElementById('phone');
     const nameInput = document.getElementById('name');
-    const saveBtn = document.getElementById('saveBtn');
-
-    function prefill() {
-      const savedPhone = localStorage.getItem('wa_phone');
-      const savedName = localStorage.getItem('wa_name');
-      if (savedPhone) phoneInput.value = savedPhone;
-      if (savedName) nameInput.value = savedName;
-      setStatus(savedPhone ? 'Loaded saved details.' : 'No saved details yet.');
-      validateInput();
-    }
+    const shareBtn = document.getElementById('shareBtn');
+    const contactListDiv = document.getElementById('contactList');
 
     function setStatus(msg, isError = false) {
       const el = document.getElementById('status');
@@ -93,18 +77,55 @@
     }
 
     function validatePhone(p) {
-      return /^[0-9]{10}$/.test(p); // exactly 10 digits
+      return /^[0-9]{10}$/.test(p);
     }
 
     function validateInput() {
       if (validatePhone(phoneInput.value.trim())) {
-        saveBtn.classList.add('active');
+        shareBtn.classList.add('active');
       } else {
-        saveBtn.classList.remove('active');
+        shareBtn.classList.remove('active');
       }
     }
 
     phoneInput.addEventListener('input', validateInput);
+
+    function saveContact() {
+      const phone = phoneInput.value.trim();
+      const name = nameInput.value.trim();
+
+      if (!validatePhone(phone)) {
+        setStatus('Enter a valid 10-digit number before saving.', true);
+        return;
+      }
+
+      let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
+      contacts.push({ name: name || 'Unnamed', phone });
+      localStorage.setItem('wa_contacts', JSON.stringify(contacts));
+
+      setStatus(`Saved: ${name || 'Unnamed'} (${phone})`);
+      phoneInput.value = '';
+      nameInput.value = '';
+      validateInput();
+    }
+
+    function showContacts() {
+      let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
+      if (contacts.length === 0) {
+        contactListDiv.style.display = 'block';
+        contactListDiv.innerHTML = '<p>No contacts saved yet.</p>';
+        return;
+      }
+
+      let html = '<ul>';
+      contacts.forEach(c => {
+        html += `<li><strong>${c.name}</strong> — ${c.phone}</li>`;
+      });
+      html += '</ul>';
+
+      contactListDiv.style.display = 'block';
+      contactListDiv.innerHTML = html;
+    }
 
     async function shareLocation() {
       const phone = phoneInput.value.trim();
@@ -114,9 +135,6 @@
         setStatus('Enter a valid 10-digit mobile number.', true);
         return;
       }
-
-      localStorage.setItem('wa_phone', phone);
-      if (name) localStorage.setItem('wa_name', name);
 
       if (!('geolocation' in navigator)) {
         setStatus('Geolocation not supported by this browser.', true);
@@ -142,7 +160,7 @@
         (err) => {
           let msg = 'Failed to get location.';
           if (err.code === 1) msg = 'Location permission denied. Allow it and try again.';
-          if (err.code === 2) msg = 'Position unavailable. Try moving to open sky or enabling GPS.';
+          if (err.code === 2) msg = 'Position unavailable. Try enabling GPS or moving outdoors.';
           if (err.code === 3) msg = 'Location request timed out. Try again.';
           setStatus(msg, true);
         },
@@ -150,10 +168,7 @@
       );
     }
 
-    saveBtn.addEventListener('click', shareLocation);
-
-    // Prefill if data exists
-    (function init() { prefill(); })();
+    shareBtn.addEventListener('click', shareLocation);
   </script>
 </body>
 </html>
