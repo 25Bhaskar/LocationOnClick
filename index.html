@@ -195,12 +195,6 @@
       setTimeout(() => { el.textContent = ''; }, duration);
     }
 
-    function setStatus(msg, isError = false) {
-      const el = document.getElementById('status');
-      el.textContent = msg;
-      el.className = 'status ' + (isError ? 'error' : 'ok');
-    }
-
     function validatePhone(p) { return /^[0-9]{10}$/.test(p); }
     function validateInput() { if (validatePhone(phoneInput.value.trim())) shareBtn.classList.add('active'); else shareBtn.classList.remove('active'); }
     phoneInput.addEventListener('input', validateInput);
@@ -208,11 +202,11 @@
     function saveContact() {
       const phone = phoneInput.value.trim();
       const name = nameInput.value.trim() || "Unnamed";
-      if (!validatePhone(phone)) { setStatus(text[isHindi ? 'hi':'en'].statusEnterValid, true); return; }
+      if (!validatePhone(phone)) { flashStatus(text[isHindi ? 'hi':'en'].statusEnterValid, true); return; }
       let contacts = JSON.parse(localStorage.getItem('wa_contacts') || '[]');
       contacts.push({ name, phone });
       localStorage.setItem('wa_contacts', JSON.stringify(contacts));
-      setStatus(text[isHindi ? 'hi':'en'].statusSaved(name));
+      flashStatus(text[isHindi ? 'hi':'en'].statusSaved(name));
       phoneInput.value = ''; nameInput.value = ''; validateInput();
       updateContactButtonsText();
     }
@@ -246,8 +240,8 @@
 
     async function shareLocation(phone) {
       const lang = isHindi ? 'hi':'en';
-      if (!validatePhone(phone)) { setStatus(text[lang].statusInvalidPhone, true); return; }
-      if (!('geolocation' in navigator)) { setStatus(text[lang].statusGeoUnsupported, true); return; }
+      if (!validatePhone(phone)) { flashStatus(text[lang].statusInvalidPhone, true); return; }
+      if (!('geolocation' in navigator)) { flashStatus(text[lang].statusGeoUnsupported, true); return; }
       setStatus(text[lang].statusGettingLocation);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -265,7 +259,7 @@
           if (err.code === 1) msg = text[lang].statusPermissionDenied;
           if (err.code === 2) msg = text[lang].statusPositionUnavailable;
           if (err.code === 3) msg = text[lang].statusTimeout;
-          setStatus(msg, true);
+          flashStatus(msg, true);
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
