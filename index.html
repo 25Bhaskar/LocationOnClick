@@ -65,7 +65,7 @@
       <input id="name" type="text" placeholder="Enter Name (optional)" />
     </div>
     <div class="row">
-      <!-- ✅ Placeholder updated -->
+      <!-- placeholder per requirement -->
       <input id="phone" type="tel" placeholder="Enter mobile number" inputmode="tel" />
     </div>
     <div class="row">
@@ -79,7 +79,6 @@
       <button id="papaBtn" onclick="callPapa()" style="background:#d32f2f; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; cursor:pointer;">
         📞 Emergency
       </button>
-      <!-- ✅ Emergency field updated -->
       <input id="papaNumber" type="tel" placeholder="Enter mobile number" inputmode="tel" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ddd; margin-left:8px;" />
       <button id="papaEditBtn" class="btn btn-check">Edit</button>
       <button id="papaSaveBtn" class="btn btn-save" style="display:none;">Save</button>
@@ -98,30 +97,72 @@ const phoneInput = document.getElementById('phone');
 const nameInput = document.getElementById('name');
 const shareBtn = document.getElementById('shareBtn');
 const contactListDiv = document.getElementById('contactList');
+const translateBtn = document.getElementById('translateBtn');
 const papaInput = document.getElementById('papaNumber');
 const papaBtn = document.getElementById('papaBtn');
 const recentBtn = document.getElementById('recentBtn');
 const papaEditBtn = document.getElementById('papaEditBtn');
 const papaSaveBtn = document.getElementById('papaSaveBtn');
 
-// ✅ Accepts either +91xxxxxxxxxx or 10-digit number
-function validatePhone(p){ 
-  return /^(\+[1-9]\d{9,14}|[0-9]{10})$/.test(p);
-}
+let langState = 0; // 0 = English, 1 = Hindi
+const languages = ['en','hi'];
 
-// Normalize phone to E.164 format for WhatsApp
-function normalizePhone(p){
-  p = p.trim();
-  if(p.startsWith("+")) return p.replace(/\D/g,"");  // keep as is but strip non-digits
-  if(/^[0-9]{10}$/.test(p)) return "91" + p;        // default to India +91
-  return p.replace(/\D/g,""); 
-}
-
-function validateInput(){ 
-  if(validatePhone(phoneInput.value.trim())) shareBtn.classList.add('active'); 
-  else shareBtn.classList.remove('active'); 
-}
-phoneInput.addEventListener('input',validateInput);
+const text = {
+  en:{ 
+    title:"Send My Live Location on WhatsApp",
+    description:"Enter details and share live location instantly.",
+    namePlaceholder:"Enter Name (optional)",
+    phonePlaceholder:"Enter mobile number",
+    btnSave:"Save Contact",
+    btnCheck:"Check Saved Contacts",
+    shareBtn:"Share Location",
+    note:"Requires location permission.",
+    statusSaved:name=>`Saved: ${name}`,
+    statusEnterValid:"Enter a valid mobile number.",
+    statusInvalidPhone:"Enter a valid mobile number.",
+    statusGeoUnsupported:"Geolocation not supported by this browser.",
+    statusGettingLocation:"Getting location… please allow permission.",
+    statusOpeningWhatsApp:"Opening WhatsApp…",
+    statusGeoFail:"Failed to get location.",
+    statusPermissionDenied:"Location permission denied. Allow it and try again.",
+    statusPositionUnavailable:"Position unavailable. Try enabling GPS or moving outdoors.",
+    statusTimeout:"Location request timed out. Try again.",
+    noContacts:"No contacts saved yet.",
+    sendLocationBtn:"Send Location",
+    deleteBtn:"Delete",
+    translateBtn:"हिंदी",
+    emergencyBtn:"Emergency",
+    papaPlaceholder:"Enter mobile number",
+    callRecentBtn:"Call Recently Saved Contact"
+  },
+  hi:{ 
+    title:"व्हाट्सएप पर मेरी लाइव लोकेशन भेजें",
+    description:"विवरण दर्ज करें और तुरंत लाइव लोकेशन साझा करें।",
+    namePlaceholder:"नाम दर्ज करें (वैकल्पिक)",
+    phonePlaceholder:"मोबाइल नंबर दर्ज करें",
+    btnSave:"संपर्क सहेजें",
+    btnCheck:"सहेजे गए संपर्क देखें",
+    shareBtn:"लोकेशन साझा करें",
+    note:"लोकेशन अनुमति आवश्यक है।",
+    statusSaved:name=>`सहेजा गया: ${name}`,
+    statusEnterValid:"कृपया सही मोबाइल नंबर दर्ज करें।",
+    statusInvalidPhone:"कृपया सही मोबाइल नंबर दर्ज करें।",
+    statusGeoUnsupported:"इस ब्राउज़र में जियोलोकेशन समर्थित नहीं है।",
+    statusGettingLocation:"लोकेशन प्राप्त की जा रही है… अनुमति दें।",
+    statusOpeningWhatsApp:"WhatsApp खोला जा रहा है…",
+    statusGeoFail:"लोकेशन प्राप्त करने में विफल।",
+    statusPermissionDenied:"लोकेशन अनुमति अस्वीकृत। अनुमति दें और पुनः प्रयास करें।",
+    statusPositionUnavailable:"स्थिति उपलब्ध नहीं। GPS सक्षम करें या बाहर जाएँ।",
+    statusTimeout:"लोकेशन अनुरोध समय समाप्त। पुनः प्रयास करें।",
+    noContacts:"अभी तक कोई संपर्क सहेजा नहीं गया।",
+    sendLocationBtn:"लोकेशन भेजें",
+    deleteBtn:"हटाएँ",
+    translateBtn:"English",
+    emergencyBtn:"आपातकालीन",
+    papaPlaceholder:"मोबाइल नंबर दर्ज करें",
+    callRecentBtn:"हाल ही में सहेजे गए संपर्क को कॉल करें"
+  }
+};
 
 function flashStatus(msg,isError=false,duration=3000){
   const el=document.getElementById('status');
@@ -130,20 +171,163 @@ function flashStatus(msg,isError=false,duration=3000){
   setTimeout(()=>{el.textContent='';},duration);
 }
 
+// ✅ Accept +CountryCode with 10–15 digits OR plain 10 digits
+function validatePhone(p){ 
+  return /^(\+[1-9]\d{9,14}|[0-9]{10})$/.test(p.trim());
+}
+
+// Normalize to digits for WhatsApp (no +), default India (+91) if 10 digits
+function normalizeForWhatsApp(p){
+  p = p.trim();
+  if(p.startsWith('+')) return p.replace(/\D/g,'');        // "+919876..." -> "919876..."
+  if(/^\d{10}$/.test(p)) return '91' + p;                  // "9876..."   -> "919876..."
+  return p.replace(/\D/g,'');
+}
+
+// Normalize to tel: format with a leading +
+function normalizeForTel(p){
+  const digits = normalizeForWhatsApp(p);                  // "919876..."
+  return '+' + digits;                                     // "+919876..."
+}
+
+function validateInput(){ 
+  if(validatePhone(phoneInput.value.trim())) shareBtn.classList.add('active'); 
+  else shareBtn.classList.remove('active'); 
+}
+phoneInput.addEventListener('input',validateInput);
+
+function saveContact(){
+  const phone=phoneInput.value.trim(); 
+  const name=nameInput.value.trim()||"Un-known"; 
+  const lang = languages[langState];
+  if(!validatePhone(phone)){flashStatus(text[lang].statusEnterValid,true); return;} 
+  let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
+  contacts.push({name,phone}); 
+  localStorage.setItem('wa_contacts',JSON.stringify(contacts)); 
+  flashStatus(text[lang].statusSaved(name)); 
+  phoneInput.value=''; nameInput.value=''; validateInput(); showContacts();
+}
+
+function showContacts(){
+  let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
+  const lang = languages[langState];
+  if(contacts.length===0){ contactListDiv.style.display='block'; contactListDiv.innerHTML=`<p>${text[lang].noContacts}</p>`; return; }
+  let html='<ul>'; 
+  contacts.forEach((c,index)=>{
+    html+=`<li><span><strong>${c.name}</strong> — ${c.phone}</span>
+    <div style="display:flex; gap:6px;">
+      <button class="btn-send" onclick="fillAndSend(${index})">${text[lang].sendLocationBtn}</button>
+      <button class="btn-send delete" onclick="deleteContact(${index})">${text[lang].deleteBtn}</button>
+    </div></li>`;
+  }); 
+  html+='</ul>'; contactListDiv.style.display='block'; contactListDiv.innerHTML=html;
+}
+
+function updateContactButtonsText(){
+  const lang = languages[langState];
+  const buttons = contactListDiv.querySelectorAll('.btn-send');
+  buttons.forEach(btn=>{
+    if(btn.classList.contains('delete')) btn.innerText = text[lang].deleteBtn;
+    else btn.innerText = text[lang].sendLocationBtn;
+  });
+}
+
 function shareLocation(phone){
-  if(!validatePhone(phone)){flashStatus("Enter valid number",true); return;} 
-  if(!('geolocation' in navigator)){flashStatus("Geolocation not supported",true); return;} 
-  flashStatus("Getting location…"); 
+  const lang=languages[langState];
+  if(!validatePhone(phone)){flashStatus(text[lang].statusInvalidPhone,true); return;} 
+  if(!('geolocation' in navigator)){flashStatus(text[lang].statusGeoUnsupported,true); return;} 
+  flashStatus(text[lang].statusGettingLocation); 
   navigator.geolocation.getCurrentPosition(pos=>{
     const lat=pos.coords.latitude.toFixed(6); 
     const lng=pos.coords.longitude.toFixed(6); 
     const mapsLink=`https://maps.google.com/?q=${lat},${lng}`; 
-    const msg=`My current location is: ${mapsLink}`; 
-    const normalized = normalizePhone(phone);
-    setTimeout(()=>{ window.location.href=`https://wa.me/${normalized}/?text=${encodeURIComponent(msg)}` }, 100);
-    flashStatus("Opening WhatsApp…");
-  },err=>{flashStatus("Location error",true);});
+    const msg=(lang==='hi'?'मेरी वर्तमान लोकेशन है: ':'My current location is: ')+mapsLink; 
+    const normalized = normalizeForWhatsApp(phone);
+    // IMPORTANT: no extra slash before ?text
+    setTimeout(()=>{ window.location.href=`https://wa.me/${normalized}?text=${encodeURIComponent(msg)}`; }, 100);
+    flashStatus(text[lang].statusOpeningWhatsApp);
+  },err=>{
+    let msg=''; 
+    if(err.code===1) msg=text[lang].statusPermissionDenied;
+    else if(err.code===2) msg=text[lang].statusPositionUnavailable;
+    else if(err.code===3) msg=text[lang].statusTimeout;
+    else msg=text[lang].statusGeoFail; 
+    flashStatus(msg,true);
+  });
 }
+
+function fillAndSend(index){
+  const contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]');
+  if(index>=0 && index<contacts.length) shareLocation(contacts[index].phone);
+}
+
+function deleteContact(index){
+  let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]'); 
+  if(index>=0 && index<contacts.length){contacts.splice(index,1); localStorage.setItem('wa_contacts',JSON.stringify(contacts)); showContacts();}
+}
+
+function toggleLanguage(){
+  langState = (langState+1)%languages.length; 
+  const lang = languages[langState];
+  document.getElementById('title').textContent = text[lang].title;
+  document.getElementById('description').textContent = text[lang].description;
+  document.getElementById('note').textContent = text[lang].note;
+  document.getElementById('name').placeholder = text[lang].namePlaceholder;
+  document.getElementById('phone').placeholder = text[lang].phonePlaceholder;
+  document.getElementById('btnSave').textContent = text[lang].btnSave;
+  document.getElementById('btnCheck').textContent = text[lang].btnCheck;
+  shareBtn.textContent = text[lang].shareBtn;
+  translateBtn.innerHTML = `<img src="https://img.icons8.com/ios-filled/50/ffffff/language.png" alt="Translate Icon" /> ${text[lang].translateBtn}`;
+  papaBtn.textContent = `📞 ${text[lang].emergencyBtn}`;
+  papaInput.placeholder = text[lang].papaPlaceholder;
+  recentBtn.textContent = `📞 ${text[lang].callRecentBtn}`;
+  updateContactButtonsText();
+}
+
+shareBtn.addEventListener('click',()=>{shareLocation(phoneInput.value.trim());});
+
+// ---- Emergency number edit/save ----
+papaEditBtn.addEventListener('click',()=>{
+  papaInput.removeAttribute('disabled');
+  papaSaveBtn.style.display = 'inline-block';
+  papaEditBtn.style.display = 'none';
+});
+
+papaSaveBtn.addEventListener('click',()=>{
+  const phone = papaInput.value.trim();
+  const lang = languages[langState];
+  if(!validatePhone(phone)){ alert(text[lang].statusInvalidPhone); return; }
+  // Save in normalized +E.164 for consistency
+  localStorage.setItem('emergency_number', normalizeForTel(phone));
+  papaInput.value = localStorage.getItem('emergency_number');
+  papaInput.setAttribute('disabled','true');
+  papaSaveBtn.style.display = 'none';
+  papaEditBtn.style.display = 'inline-block';
+  flashStatus(`Emergency number saved`);
+});
+
+function callPapa(){
+  const phone=papaInput.value.trim();
+  const lang = languages[langState];
+  if(!validatePhone(phone)){ alert(text[lang].statusInvalidPhone); return; }
+  window.location.href=`tel:${normalizeForTel(phone)}`;
+}
+
+function callRecent(){
+  let contacts=JSON.parse(localStorage.getItem('wa_contacts')||'[]');
+  const lang = languages[langState];
+  if(contacts.length===0){alert(text[lang].noContacts); return;}
+  const recentPhone = contacts[contacts.length-1].phone;
+  if(!validatePhone(recentPhone)){ alert(text[lang].statusInvalidPhone); return; }
+  window.location.href=`tel:${normalizeForTel(recentPhone)}`;
+}
+
+// Load saved emergency number
+window.addEventListener('load',()=>{
+  const saved = localStorage.getItem('emergency_number');
+  if(saved){ papaInput.value = saved; papaInput.setAttribute('disabled','true'); }
+  validateInput();
+});
 </script>
 </body>
 </html>
